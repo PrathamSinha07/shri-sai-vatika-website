@@ -3,6 +3,7 @@
 import { getImageProps } from "next/image";
 import { motion, MotionConfig } from "motion/react";
 import { site } from "@/content/site";
+import { bookVisitHref } from "@/content/navigation";
 import { whatsappUrl } from "@/lib/whatsapp";
 
 const tourMessage = `Namaste, I would like to request a virtual or in-person tour of ${site.name}. Please share available dates and timings.`;
@@ -50,8 +51,17 @@ export default function Hero() {
             transition={{ duration: 0.7, ease: "easeOut" }}
             className="max-w-2xl"
           >
-            <p className="eyebrow" style={{ color: "var(--color-gold-muted)" }}>{site.shortName}</p>
-            <h1 className="font-display mt-4 text-hero text-surface">
+            <p
+              className="font-display text-2xl font-semibold tracking-[0.04em] sm:text-3xl md:text-[2rem]"
+              style={{
+                color: "var(--color-gold-rich)",
+                textShadow:
+                  "0 1px 2px rgba(74, 12, 23, 0.85), 0 2px 16px rgba(74, 12, 23, 0.55)",
+              }}
+            >
+              {site.shortName}
+            </p>
+            <h1 className="font-display mt-5 text-hero text-surface">
               Where Celebrations Become Memories
             </h1>
             <p className="text-body mt-5 max-w-xl text-surface/90">
@@ -62,7 +72,7 @@ export default function Hero() {
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
               <a
-                href="#contact"
+                href={bookVisitHref}
                 className="btn-text inline-flex items-center justify-center bg-primary px-7 py-4 text-surface transition-colors hover:bg-primary-deep"
               >
                 Plan Your Celebration

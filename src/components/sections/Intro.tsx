@@ -10,7 +10,7 @@ const tourMessage = `Namaste, I would like to request a tour of ${site.name}. Pl
 export default function Intro() {
   return (
     <MotionConfig reducedMotion="user">
-      <section id="venue" className="bg-background" aria-labelledby="intro-heading">
+      <section id="intro" className="bg-background" aria-labelledby="intro-heading">
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 md:grid-cols-2 md:items-center md:py-24">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
