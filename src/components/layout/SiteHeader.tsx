@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { navLinks } from "@/content/navigation";
+import { navLinks, bookVisitHref } from "@/content/navigation";
 import { site } from "@/content/site";
-import { whatsappUrl, defaultEnquiryMessage } from "@/lib/whatsapp";
 
 export default function SiteHeader({ overlay }: { overlay?: boolean }) {
   const pathname = usePathname();
@@ -98,9 +97,7 @@ export default function SiteHeader({ overlay }: { overlay?: boolean }) {
           </nav>
 
           <a
-            href={whatsappUrl(defaultEnquiryMessage)}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={bookVisitHref}
             className={`btn-text hidden md:inline-flex items-center border px-5 py-2.5 transition-colors ${
               scrolled || !transparentOverlay
                 ? "border-primary text-primary hover:bg-primary hover:text-surface"
@@ -168,12 +165,11 @@ export default function SiteHeader({ overlay }: { overlay?: boolean }) {
 
           <div className="px-6 pt-8">
             <a
-              href={whatsappUrl(defaultEnquiryMessage)}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={bookVisitHref}
+              onClick={() => setOpen(false)}
               className="btn-text inline-flex w-full items-center justify-center bg-primary px-5 py-4 text-surface"
             >
-              Plan Your Visit on WhatsApp
+              Plan Your Visit
             </a>
             <p className="mt-4 text-small text-muted-foreground">
               {site.address.lines.join(", ")}
