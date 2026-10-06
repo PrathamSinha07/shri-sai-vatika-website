@@ -17,22 +17,25 @@ export const site = {
 export const verifiedNotice =
   "Business details and pricing are client-provided and pending verification.";
 
+// Flat list retained for compatibility; structured facilities live in
+// `src/content/facilities.ts`.
 export const facilities = [
   "3000 sq.ft. AC Hall",
-  "8000 sq.ft. Lawn Area",
+  "8000 sq.ft. Lawn",
   "4 Deluxe AC Rooms",
-  "Flower decoration",
-  "Lighting setup",
   "Parking",
-  "WiFi",
   "CCTV surveillance",
-  "Security",
+  "Wi-Fi",
+  "Security guard",
   "Fire safety",
   "Purified water",
-  "Stage/decor",
   "Power backup",
-  "Catering",
-  "Wedding/event services",
+  "Stage",
+  "Gate/passage decoration",
+  "Food stall",
+  "Selfie point",
+  "Varmala",
+  "30-piece Baraat welcome mala",
 ] as const;
 
 export const packages = [

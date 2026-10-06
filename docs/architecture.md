@@ -43,6 +43,18 @@ supabase/
 docs/
 ```
 
+## Public vs private areas
+
+- **Public** customer site: `/` with sections `#venue`, `#facilities`,
+  `#services`, `#gallery`, `#packages`, `#location`, `#book-a-visit`,
+  `#contact`. Public without an account; no dashboard links anywhere in
+  the UI.
+- **Private** owner area (future milestone, not built): `/admin/login`,
+  `/admin`, `/admin/bookings`, behind Supabase Auth plus explicit
+  owner/admin authorization. The previous architecture's
+  `api/admin/...` placeholders were never implemented and must not be
+  exposed publicly.
+
 ## Data flow (enquiry)
 
 1. Visitor submits a tour/booking enquiry form (client component).
@@ -52,6 +64,28 @@ docs/
    - confirmation email to the customer (Resend)
 3. Admin interface (later) reads `enquiries` via Supabase with RLS-aware
    access.
+
+## Site sections & navigation (planned)
+
+Canonical section ids live in `src/content/navigation.ts` (`sectionIds`):
+`home`, `venue`, `facilities`, `services`, `gallery`, `packages`,
+`location`, `book-a-visit`, `contact`. Sections without a built anchor yet
+simply render no anchor; future milestones add the matching `<section id>`
+without restructuring the layout.
+
+- Facilities section: built (`Facilities.tsx`), content in
+  `src/content/facilities.ts`.
+- Services: official categories preserved in `src/content/services.ts`;
+  section deferred.
+- Gallery: planned categories Photos / Videos only (`galleryCategories`);
+  section deferred.
+- Plan Your Visit: live booking form at `#book-a-visit` with
+  `POST /api/visit-bookings` + availability endpoint; see
+  `docs/booking-system.md`. Owner dashboard intentionally not built.
+- Director's Message: future section; Mr. Navneet Kumar, Director, Shri
+  Sai Vatika Banquet Hall — content to be supplied by the client.
+- Reviews/testimonials: intentionally deferred until genuine client-
+  provided material exists.
 
 ## Rendering
 
