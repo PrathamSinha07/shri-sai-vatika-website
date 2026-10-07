@@ -8,8 +8,8 @@ export default function Venue() {
   return (
     <MotionConfig reducedMotion="user">
       <section id="venue" className="bg-background" aria-labelledby="venue-heading">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 md:py-24">
-          <div className="grid gap-12 md:grid-cols-2 md:items-start md:gap-16">
+        <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 md:py-20">
+          <div className="grid gap-10 md:grid-cols-2 md:items-center md:gap-14">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -21,11 +21,11 @@ export default function Venue() {
                 {venueAbout.heading}
               </h2>
               {venueAbout.paragraphs.map((p, i) => (
-                <p key={i} className="text-body mt-5 text-muted-foreground">
+                <p key={i} className="text-body mt-4 text-muted-foreground">
                   {p}
                 </p>
               ))}
-              <dl className="mt-8 grid grid-cols-1 gap-x-8 gap-y-4 border-t border-border pt-6 sm:grid-cols-2">
+              <dl className="mt-6 grid grid-cols-1 gap-x-8 gap-y-3 border-t border-border pt-5 sm:grid-cols-2">
                 {venueAbout.facts.map((f) => (
                   <div key={f}>
                     <dt className="sr-only">Venue detail</dt>
@@ -42,15 +42,15 @@ export default function Venue() {
               transition={{ duration: 0.7, ease: "easeOut" }}
             >
               <Image
-                src="/images/02.jpg"
-                alt="Event space at Shri Sai Vatika Banquet Hall, Danapur"
+                src="/images/06.jpg"
+                alt="Wide view of Shri Sai Vatika venue exterior at night with lawn, red carpet, and decorated canopy"
                 width={1200}
-                height={900}
+                height={800}
                 sizes="(max-width: 767px) 100vw, 50vw"
                 className="h-auto w-full"
               />
               <figcaption className="text-small mt-3 text-muted-foreground">
-                The venue spaces at Shri Sai Vatika, Danapur, Patna.
+                The venue at Shri Sai Vatika, Danapur, Patna.
               </figcaption>
             </motion.figure>
           </div>

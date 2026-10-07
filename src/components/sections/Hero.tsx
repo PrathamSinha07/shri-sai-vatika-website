@@ -31,7 +31,7 @@ export default function Hero() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <section className="relative isolate flex min-h-[85svh] items-end overflow-hidden md:min-h-[88vh]" aria-label="Introduction">
+      <section className="relative isolate flex min-h-svh items-end overflow-hidden md:min-h-screen" aria-label="Introduction">
         <picture className="absolute inset-0 -z-10">
           <source media="(max-width: 767px)" srcSet={mobileSrcSet} />
           <source media="(min-width: 768px)" srcSet={desktopSrcSet} />
