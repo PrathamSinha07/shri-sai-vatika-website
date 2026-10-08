@@ -1,7 +1,7 @@
 import { chromium } from "playwright-core";
 import { mkdirSync } from "node:fs";
 
-const BASE = "http://localhost:3001";
+const BASE = process.env.QA_BASE || "http://localhost:3001";
 const EDGE = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
 const OUT = "scripts/qa-shots";
 mkdirSync(OUT, { recursive: true });

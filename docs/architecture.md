@@ -77,8 +77,10 @@ without restructuring the layout.
   `src/content/facilities.ts`.
 - Services: official categories preserved in `src/content/services.ts`;
   section deferred.
-- Gallery: planned categories Photos / Videos only (`galleryCategories`);
-  section deferred.
+- Gallery: built (`Gallery.tsx`) with Photos / Videos tabs, content in
+  `src/content/gallery.ts`. Photos are a curated selection of real venue
+  photographs with a custom lightbox; `galleryVideos` is intentionally
+  empty until the client supplies real video URLs.
 - Plan Your Visit: live booking form at `#book-a-visit` with
   `POST /api/visit-bookings` + availability endpoint; see
   `docs/booking-system.md`. Owner dashboard intentionally not built.
