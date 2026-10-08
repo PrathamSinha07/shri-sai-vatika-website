@@ -4,6 +4,7 @@ import Facilities from "@/components/sections/Facilities";
 import Venue from "@/components/sections/Venue";
 import Director from "@/components/sections/Director";
 import Services from "@/components/sections/Services";
+import Gallery from "@/components/sections/Gallery";
 import BookVisitForm from "@/components/sections/BookVisitForm";
 import ScrollReset from "@/components/ScrollReset";
 
@@ -17,6 +18,7 @@ export default function Home() {
       <Director />
       <Facilities />
       <Services />
+      <Gallery />
       <section
         id="book-a-visit"
         className="bg-background"

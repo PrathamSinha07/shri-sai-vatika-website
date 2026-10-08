@@ -26,6 +26,6 @@ export const navLinks = [
 
 export const bookVisitHref = `#${sectionIds.bookVisit}`;
 
-// Future gallery taxonomy (implemented in a later milestone):
+// Gallery taxonomy (built: Gallery.tsx renders Photos / Videos tabs):
 // PHOTOS and VIDEOS must remain clearly separated categories.
 export const galleryCategories = ["Photos", "Videos"] as const;
