@@ -73,8 +73,9 @@ export const services: readonly Service[] = [
     tagline: "Every moment, preserved",
     description:
       "Your celebration happens once — but the memories last forever. Shri Sai Vatika's photogenic spaces, from the fountain lawn to the decorated stage, provide stunning backdrops for photography and videography, so every moment is preserved exactly as it felt.",
-    image: "/images/10.jpg",
-    imageAlt: "White fountain in the lawn at Shri Sai Vatika at night with decorated canopy in background",
+    image: "/images/video_photography.jpg",
+    imageAlt:
+      "Camera on a tripod filming a bride and groom during their wedding ceremony",
     details: [
       "Picturesque venue spaces that serve as natural backdrops for photography",
       "The fountain lawn, decorated stage, and entrance corridor, each with its own character",
@@ -89,8 +90,9 @@ export const services: readonly Service[] = [
     tagline: "An entrance worthy of the moment",
     description:
       "The entry of the bride and groom is one of the most anticipated moments of any wedding. At Shri Sai Vatika, the entrance is designed to make that moment unforgettable — from the decorated pathway to the welcoming atmosphere that greets the couple and their guests.",
-    image: "/images/16.jpg",
-    imageAlt: "Entrance pathway at Shri Sai Vatika with red carpet, yellow draped canopy, and floral decorations",
+    image: "/images/Entry.jpg",
+    imageAlt:
+      "Bride and groom making a grand entry through a haze of dry ice and cold pyro sparks",
     details: [
       "A decorated entrance pathway laid with a red carpet for the couple's arrival",
       "Floral and fabric decorations along the entry route, composed for the occasion",
@@ -105,8 +107,9 @@ export const services: readonly Service[] = [
     tagline: "The grand procession, celebrated in style",
     description:
       "The baraat is a celebration in itself — music, dancing, and joy that fills the streets before the ceremony even begins. Shri Sai Vatika welcomes baraats with the grandeur they deserve, providing the space and support the procession needs to arrive in style.",
-    image: "/images/03.jpg",
-    imageAlt: "Entrance gate of Shri Sai Vatika at night with floral decorations and draped fabric",
+    image: "/images/Baraat.jpg",
+    imageAlt:
+      "Groom in a cream sherwani dancing with baraatis during a night baraat procession",
     details: [
       "A grand entrance gate that gives the baraat a fitting and memorable arrival",
       "A 30-piece baraat welcome mala for the groom, arranged with tradition and care",
@@ -121,8 +124,9 @@ export const services: readonly Service[] = [
     tagline: "A stage for the sacred exchange",
     description:
       "The jaimala ceremony marks the beautiful beginning of a new journey together. Shri Sai Vatika's stages are designed to honour this moment — elegant, dignified, and worthy of the occasion — so the exchange feels as significant as it truly is.",
-    image: "/images/11.jpg",
-    imageAlt: "Wedding stage with golden ornate arch, floral garlands, and white chairs at Shri Sai Vatika",
+    image: "/images/jaimala.jpg",
+    imageAlt:
+      "Bride and groom standing beneath a white floral canopy scattered with rose petals",
     details: [
       "Elegant stage setups composed specifically for jaimala ceremonies",
       "Golden arch and floral garland decorations that frame the couple beautifully",
