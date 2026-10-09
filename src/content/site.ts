@@ -19,6 +19,7 @@ export const verifiedNotice =
 
 // Flat list retained for compatibility; structured facilities live in
 // `src/content/facilities.ts`.
+// Package pricing lives in `src/content/packages.ts`.
 export const facilities = [
   "3000 sq.ft. AC Hall",
   "8000 sq.ft. Lawn",
@@ -38,20 +39,4 @@ export const facilities = [
   "30-piece Baraat welcome mala",
 ] as const;
 
-export const packages = [
-  {
-    name: "Complete Venue Package",
-    price: "₹1,60,000",
-    note: "Full venue booking",
-  },
-  {
-    name: "Deluxe Catering",
-    price: "₹849/person",
-    note: "Per-plate catering",
-  },
-  {
-    name: "Royal Catering",
-    price: "₹1,099/person",
-    note: "Premium per-plate catering",
-  },
-] as const;
+

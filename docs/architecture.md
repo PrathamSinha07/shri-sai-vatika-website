@@ -65,27 +65,40 @@ docs/
 3. Admin interface (later) reads `enquiries` via Supabase with RLS-aware
    access.
 
-## Site sections & navigation (planned)
+## Site sections & navigation
 
 Canonical section ids live in `src/content/navigation.ts` (`sectionIds`):
 `home`, `venue`, `facilities`, `services`, `gallery`, `packages`,
-`location`, `book-a-visit`, `contact`. Sections without a built anchor yet
-simply render no anchor; future milestones add the matching `<section id>`
-without restructuring the layout.
+`location`, `book-a-visit`, `contact`. Every id above now has a matching
+homepage anchor; header and footer navigation links are hash-only on the
+homepage and prefix `/` on other routes so they always reach the
+homepage section.
 
 - Facilities section: built (`Facilities.tsx`), content in
   `src/content/facilities.ts`.
-- Services: official categories preserved in `src/content/services.ts`;
-  section deferred.
+- Services: built (`Services.tsx` + `/services/[slug]`), official
+  categories preserved in `src/content/services.ts`.
 - Gallery: built (`Gallery.tsx`) with Photos / Videos tabs, content in
   `src/content/gallery.ts`. Photos are a curated selection of real venue
   photographs with a custom lightbox; `galleryVideos` is intentionally
   empty until the client supplies real video URLs.
+- Packages: built (`Packages.tsx`), content in `src/content/packages.ts`.
+  Client-confirmed pricing only — Complete Venue Package (₹1,60,000),
+  Deluxe Catering (₹849/person), Royal Catering (₹1,099/person);
+  non-vegetarian catering is quoted separately. Each offering has a
+  pre-filled WhatsApp enquiry link; no inclusions, discounts or terms are
+  implied beyond what the client confirmed.
+- Location: built (`Location.tsx`), address from `src/content/site.ts`,
+  keyless Google Maps embed + directions links via `src/lib/maps.ts`
+  (derived from the confirmed address — no invented coordinates).
+- Contact: built (`Contact.tsx`), content in `src/content/contact.ts`.
+  Phone, WhatsApp and the visit-booking form only; no email address,
+  hours or social accounts exist in confirmed material.
 - Plan Your Visit: live booking form at `#book-a-visit` with
   `POST /api/visit-bookings` + availability endpoint; see
   `docs/booking-system.md`. Owner dashboard intentionally not built.
-- Director's Message: future section; Mr. Navneet Kumar, Director, Shri
-  Sai Vatika Banquet Hall — content to be supplied by the client.
+- Director's Message: built (`Director.tsx`), content in
+  `src/content/director.ts`.
 - Reviews/testimonials: intentionally deferred until genuine client-
   provided material exists.
 

@@ -1,9 +1,18 @@
+"use client";
+
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { navLinks } from "@/content/navigation";
 import { site } from "@/content/site";
 import { whatsappUrl, defaultEnquiryMessage } from "@/lib/whatsapp";
 
 export default function SiteFooter() {
+  const pathname = usePathname();
+  // Hash-only links would do nothing on other routes (e.g. service pages).
+  const sectionHref = (hash: string) =>
+    pathname === "/" ? hash : `/${hash}`;
+
   return (
     <footer className="bg-primary-deep text-ivory">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
@@ -23,9 +32,12 @@ export default function SiteFooter() {
             <ul className="flex flex-col gap-2">
               {navLinks.map((link) => (
                 <li key={link.href}>
-                  <a href={link.href} className="text-small text-ivory/80 transition-colors hover:text-gold-muted">
+                  <Link
+                    href={sectionHref(link.href)}
+                    className="text-small text-ivory/80 transition-colors hover:text-gold-muted"
+                  >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

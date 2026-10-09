@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navLinks, bookVisitHref } from "@/content/navigation";
 import { site } from "@/content/site";
@@ -9,6 +10,9 @@ import { site } from "@/content/site";
 export default function SiteHeader({ overlay }: { overlay?: boolean }) {
   const pathname = usePathname();
   const isHome = pathname === "/";
+  // On other routes (e.g. service pages) hash-only links would do nothing —
+  // point them back at the homepage section instead.
+  const sectionHref = (hash: string) => (isHome ? hash : `/${hash}`);
   const transparentOverlay = overlay ?? isHome;
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
@@ -85,19 +89,19 @@ export default function SiteHeader({ overlay }: { overlay?: boolean }) {
             <ul className="flex items-center gap-7">
               {navLinks.map((link) => (
                 <li key={link.href}>
-                  <a
-                    href={link.href}
+                  <Link
+                    href={sectionHref(link.href)}
                     className="text-nav text-current opacity-90 transition-opacity hover:opacity-100"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
           </nav>
 
-          <a
-            href={bookVisitHref}
+          <Link
+            href={sectionHref(bookVisitHref)}
             className={`btn-text hidden md:inline-flex items-center border px-5 py-2.5 transition-colors ${
               scrolled || !transparentOverlay
                 ? "border-primary text-primary hover:bg-primary hover:text-surface"
@@ -105,7 +109,7 @@ export default function SiteHeader({ overlay }: { overlay?: boolean }) {
             }`}
           >
             Plan Your Visit
-          </a>
+          </Link>
 
           <button
             type="button"
@@ -151,26 +155,26 @@ export default function SiteHeader({ overlay }: { overlay?: boolean }) {
             <ul className="flex flex-col gap-1">
               {navLinks.map((link) => (
                 <li key={link.href}>
-                  <a
-                    href={link.href}
+                  <Link
+                    href={sectionHref(link.href)}
                     onClick={() => setOpen(false)}
                     className="font-display block border-b border-border py-3 text-2xl text-primary-deep"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
           </nav>
 
           <div className="px-6 pt-8">
-            <a
-              href={bookVisitHref}
+            <Link
+              href={sectionHref(bookVisitHref)}
               onClick={() => setOpen(false)}
               className="btn-text inline-flex w-full items-center justify-center bg-primary px-5 py-4 text-surface"
             >
               Plan Your Visit
-            </a>
+            </Link>
             <p className="mt-4 text-small text-muted-foreground">
               {site.address.lines.join(", ")}
             </p>

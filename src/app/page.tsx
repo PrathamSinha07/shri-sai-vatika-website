@@ -5,7 +5,10 @@ import Venue from "@/components/sections/Venue";
 import Director from "@/components/sections/Director";
 import Services from "@/components/sections/Services";
 import Gallery from "@/components/sections/Gallery";
+import Packages from "@/components/sections/Packages";
+import Location from "@/components/sections/Location";
 import BookVisitForm from "@/components/sections/BookVisitForm";
+import Contact from "@/components/sections/Contact";
 import ScrollReset from "@/components/ScrollReset";
 
 export default function Home() {
@@ -19,6 +22,8 @@ export default function Home() {
       <Facilities />
       <Services />
       <Gallery />
+      <Packages />
+      <Location />
       <section
         id="book-a-visit"
         className="bg-background"
@@ -40,6 +45,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      <Contact />
     </>
   );
 }

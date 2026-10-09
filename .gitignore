@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/.agent-tmp
 
 # next.js
 /.next/
