@@ -1,4 +1,5 @@
 import Hero from "@/components/sections/Hero";
+import AnnouncementStrip from "@/components/sections/AnnouncementStrip";
 import Intro from "@/components/sections/Intro";
 import Facilities from "@/components/sections/Facilities";
 import Venue from "@/components/sections/Venue";
@@ -16,6 +17,7 @@ export default function Home() {
     <>
       <ScrollReset />
       <Hero />
+      <AnnouncementStrip />
       <Intro />
       <Venue />
       <Director />
