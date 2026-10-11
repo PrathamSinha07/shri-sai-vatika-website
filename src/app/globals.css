@@ -22,8 +22,18 @@
   --font-display: var(--font-cormorant), Georgia, serif;
   --font-sans: var(--font-source-sans), system-ui, sans-serif;
 
+  /*
+    Corner radius system — restrained, architectural.
+    controls = buttons/inputs, cards = repeated content panels,
+    panels  = featured panels and framed imagery.
+    Full-width bands and layout edges keep their existing geometry.
+  */
+  --radius-control: 0.375rem; /* 6px */
+  --radius-card: 0.75rem; /* 12px */
+  --radius-panel: 1rem; /* 16px */
+
   /* Type scale */
-  --text-hero: clamp(2.5rem, 6vw, 4.25rem);
+  --text-hero: clamp(2.25rem, 5.6vw, 4.5rem);
   --text-hero--line-height: 1.08;
   --text-section: clamp(1.9rem, 3.4vw, 2.6rem);
   --text-section--line-height: 1.15;
@@ -82,5 +92,54 @@ body {
     letter-spacing: 0.08em;
     text-transform: uppercase;
     font-weight: 600;
+    border-radius: var(--radius-control);
+  }
+
+  .footer-heading {
+    font-size: 0.7rem;
+    line-height: 1.25;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--color-gold-muted);
+  }
+}
+
+/*
+  Announcement strip — seamless marquee. The track holds two identical
+  lists, so translating it by exactly -50% loops without a jump.
+*/
+@keyframes marquee-x {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.marquee-track {
+  animation: marquee-x 46s linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .marquee-track > ul {
+    flex-wrap: wrap;
+    flex-shrink: 1;
+    justify-content: center;
+    row-gap: 0.5rem;
+  }
+
+  .marquee-duplicate {
+    display: none;
   }
 }

@@ -80,12 +80,12 @@ export default function SiteHeader({ overlay }: { overlay?: boolean }) {
               className="h-9 w-9 sm:h-10 sm:w-10 rounded-full"
               priority
             />
-            <span className="font-display text-xl leading-none sm:text-2xl">
+            <span className="font-display text-xl leading-none whitespace-nowrap sm:text-2xl">
               {site.shortName}
             </span>
           </a>
 
-          <nav aria-label="Primary" className="hidden md:block">
+          <nav aria-label="Primary" className="hidden lg:block">
             <ul className="flex items-center gap-7">
               {navLinks.map((link) => (
                 <li key={link.href}>
@@ -102,10 +102,10 @@ export default function SiteHeader({ overlay }: { overlay?: boolean }) {
 
           <Link
             href={sectionHref(bookVisitHref)}
-            className={`btn-text hidden md:inline-flex items-center border px-5 py-2.5 transition-colors ${
+            className={`btn-text hidden lg:inline-flex items-center whitespace-nowrap px-5 py-2.5 transition-colors ${
               scrolled || !transparentOverlay
-                ? "border-primary text-primary hover:bg-primary hover:text-surface"
-                : "border-gold-muted text-surface hover:bg-surface hover:text-primary-deep"
+                ? "bg-primary text-surface shadow-sm hover:bg-primary-deep"
+                : "border border-gold-rich/55 bg-ivory/10 text-ivory backdrop-blur-sm hover:bg-ivory hover:text-primary-deep"
             }`}
           >
             Plan Your Visit
@@ -114,7 +114,7 @@ export default function SiteHeader({ overlay }: { overlay?: boolean }) {
           <button
             type="button"
             ref={triggerRef}
-            className="md:hidden inline-flex h-10 w-10 items-center justify-center text-current"
+            className="lg:hidden inline-flex h-10 w-10 items-center justify-center text-current"
             aria-expanded={open}
             aria-controls="mobile-menu"
             aria-label={open ? "Close menu" : "Open menu"}
