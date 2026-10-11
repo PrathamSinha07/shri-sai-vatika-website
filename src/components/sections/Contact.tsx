@@ -92,7 +92,7 @@ export default function Contact() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
-                className="flex flex-col gap-6 border border-border bg-background p-6 sm:p-8"
+                className="flex flex-col gap-6 rounded-card border border-border bg-background p-6 sm:p-8"
               >
                 <span className="text-gold">{card.icon}</span>
                 <div>

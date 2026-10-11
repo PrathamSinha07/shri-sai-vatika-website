@@ -202,7 +202,7 @@ export default function Gallery() {
                     viewport={{ once: true, margin: "-60px" }}
                     transition={{ duration: 0.6, ease: "easeOut" }}
                     onClick={(event) => openPhoto(index, event.currentTarget)}
-                    className={`group relative block overflow-hidden bg-background ${layout.span} ${layout.aspect}`}
+                    className={`group relative block overflow-hidden rounded-card bg-background ${layout.span} ${layout.aspect}`}
                     style={
                       layout.aspect
                         ? undefined
@@ -253,7 +253,7 @@ export default function Gallery() {
             className="mt-10 md:mt-12"
           >
             {galleryVideos.length === 0 ? (
-              <div className="mx-auto flex min-h-[18rem] max-w-3xl flex-col items-center justify-center border border-gold-muted/60 bg-background px-6 py-14 text-center md:min-h-[24rem] md:px-12">
+              <div className="mx-auto flex min-h-[18rem] max-w-3xl flex-col items-center justify-center rounded-panel border border-gold-muted/60 bg-background px-6 py-14 text-center md:min-h-[24rem] md:px-12">
                 <span
                   aria-hidden="true"
                   className="flex h-16 w-16 items-center justify-center rounded-full border border-gold/60 text-gold"
@@ -286,7 +286,7 @@ export default function Gallery() {
                     onClick={(event) => openVideo(index, event.currentTarget)}
                     className="group block text-left"
                   >
-                    <div className="relative aspect-video overflow-hidden bg-primary-deep">
+                    <div className="relative aspect-video overflow-hidden rounded-card bg-primary-deep">
                       {video.thumbnail ? (
                         <Image
                           src={video.thumbnail}

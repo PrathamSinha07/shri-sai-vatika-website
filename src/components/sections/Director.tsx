@@ -29,7 +29,7 @@ export default function Director() {
                 width={1062}
                 height={886}
                 sizes="(max-width: 767px) 100vw, 40vw"
-                className="h-auto w-full"
+                className="h-auto w-full rounded-panel"
               />
               <figcaption className="mt-5 border-l-2 border-gold pl-4">
                 <p className="font-display text-2xl text-primary-deep">

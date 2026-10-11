@@ -47,7 +47,7 @@ export default function Venue() {
                 width={1200}
                 height={800}
                 sizes="(max-width: 767px) 100vw, 50vw"
-                className="h-auto w-full"
+                className="h-auto w-full rounded-panel"
               />
               <figcaption className="text-small mt-3 text-muted-foreground">
                 The venue at Shri Sai Vatika, Danapur, Patna.

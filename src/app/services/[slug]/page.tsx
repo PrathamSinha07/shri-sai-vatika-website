@@ -93,7 +93,7 @@ export default async function ServicePage({
               width={1200}
               height={900}
               sizes="(max-width: 767px) 100vw, 50vw"
-              className="h-auto w-full"
+              className="h-auto w-full rounded-panel"
               priority
             />
           </figure>
@@ -171,7 +171,7 @@ export default async function ServicePage({
                 <li key={s.slug}>
                   <Link
                     href={`/services/${s.slug}`}
-                    className="group flex items-center justify-between border border-border bg-background px-5 py-4 transition-colors hover:border-gold"
+                    className="group flex items-center justify-between rounded-card border border-border bg-background px-5 py-4 transition-colors hover:border-gold"
                   >
                     <span className="font-display text-lg text-primary-deep group-hover:text-primary">
                       {s.title}

@@ -37,7 +37,7 @@ export default function Services() {
                   aria-label={`Learn more about ${service.title}`}
                 >
                   <div
-                    className={`relative overflow-hidden ${
+                    className={`relative overflow-hidden rounded-card ${
                       i % 2 === 1 ? "md:order-2" : ""
                     }`}
                   >

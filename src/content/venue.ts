@@ -6,9 +6,9 @@
 
 export const venueAbout = {
   eyebrow: "The Venue",
-  heading: "A setting where celebrations feel at home",
+  heading: "A space where celebrations feel at home",
   paragraphs: [
-    "Shri Sai Vatika Banquet Hall sits on Gola Road in Danapur, a short distance from Patna — a venue built around the belief that every celebration deserves a setting as special as the moment itself.",
+    "Shri Sai Vatika Banquet Hall sits on Gola Road in Danapur, a short distance from Patna — a celebration venue built around the belief that every occasion deserves a place as special as the moment itself.",
     "From the moment guests pass through the decorated entrance, the venue unfolds as a series of carefully considered spaces: an air-conditioned hall for grand gatherings, an open lawn for evenings under the sky, and corners designed for the quieter moments in between.",
     "What makes Shri Sai Vatika feel different is the attention to hospitality — the understanding that a celebration is not just an event, but an experience shared among family and friends.",
   ],

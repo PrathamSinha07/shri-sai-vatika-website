@@ -20,7 +20,7 @@ export default function Intro() {
           >
             <p className="eyebrow">Welcome to {site.shortName}</p>
             <h2 id="intro-heading" className="font-display text-section mt-4 text-primary-deep">
-              Your celebration deserves a setting that feels as special as the moment itself.
+              Your celebration deserves a venue that feels as special as the moment itself.
             </h2>
             <p className="text-body mt-5 text-muted-foreground">
               Set on Gola Road in Danapur, Shri Sai Vatika brings together a
@@ -50,7 +50,7 @@ export default function Intro() {
               width={918}
               height={612}
               sizes="(max-width: 767px) 100vw, 50vw"
-              className="h-auto w-full"
+              className="h-auto w-full rounded-panel"
             />
           </motion.figure>
         </div>

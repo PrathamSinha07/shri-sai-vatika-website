@@ -94,7 +94,7 @@ export default function Location() {
               viewport={{ once: true, margin: "-80px" }}
               transition={{ duration: 0.7, ease: "easeOut" }}
             >
-              <div className="relative h-80 overflow-hidden border border-border bg-background sm:h-96 lg:h-[28rem]">
+              <div className="relative h-80 overflow-hidden rounded-card border border-border bg-background sm:h-96 lg:h-[28rem]">
                 <iframe
                   title={locationSection.mapTitle}
                   src={googleMapsEmbedUrl()}
