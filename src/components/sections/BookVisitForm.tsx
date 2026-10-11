@@ -73,7 +73,6 @@ export default function BookVisitForm() {
       eventTypeOther: form.get("eventTypeOther"),
       visitDate: form.get("visitDate"),
       timeSlot: form.get("timeSlot"),
-      message: form.get("message"),
       website: form.get("website"), // honeypot
     };
 
@@ -164,7 +163,7 @@ export default function BookVisitForm() {
   }
 
   const inputClass =
-    "w-full border border-border bg-surface px-4 py-3 text-body text-foreground placeholder:text-muted-foreground/70 focus:border-gold focus:outline-none";
+    "w-full rounded-control border border-border bg-surface px-4 py-3 text-body text-foreground placeholder:text-muted-foreground/70 focus:border-gold focus:outline-none";
   const errorClass = "mt-1 text-small text-primary";
 
   return (
@@ -173,7 +172,7 @@ export default function BookVisitForm() {
         {formError}
       </div>
       {formError && (
-        <p className="mb-6 border border-primary/40 bg-primary/5 px-4 py-3 text-small text-primary" role="alert">
+        <p className="mb-6 rounded-control border border-primary/40 bg-primary/5 px-4 py-3 text-small text-primary" role="alert">
           {formError}
         </p>
       )}
@@ -277,7 +276,7 @@ export default function BookVisitForm() {
             return (
               <label
                 key={slot}
-                className={`flex cursor-pointer items-center justify-between border px-4 py-3 text-small transition-colors ${
+                className={`flex cursor-pointer items-center justify-between rounded-control border px-4 py-3 text-small transition-colors ${
                   booked
                     ? "cursor-not-allowed border-border bg-ivory text-muted-foreground/70 line-through"
                     : timeSlot === slot
@@ -304,14 +303,6 @@ export default function BookVisitForm() {
         </div>
         {errors.timeSlot && <p className={errorClass}>{errors.timeSlot}</p>}
       </fieldset>
-
-      <div className="mt-6">
-        <label htmlFor="message" className="text-small font-semibold tracking-wide text-foreground">
-          Message (optional)
-        </label>
-        <textarea id="message" name="message" rows={4} maxLength={1000} className={`${inputClass} mt-2`} />
-        {errors.message && <p className={errorClass}>{errors.message}</p>}
-      </div>
 
       <button
         type="submit"

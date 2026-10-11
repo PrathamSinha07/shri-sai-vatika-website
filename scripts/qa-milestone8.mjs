@@ -206,26 +206,24 @@ try {
     );
 
     const decoded = pkg.waLinks.map((l) => decodeURIComponent(l.text));
-    // 4 per-offering enquiry links + the section-level "Ask a Question" link.
-    const offerLinks = pkg.waLinks.filter((l) => /enquire/i.test(l.label));
+    // Exactly one section-level enquiry link (per-card CTAs were removed).
     ok(
-      "Four WhatsApp enquiry links, correct number, properly encoded",
-      offerLinks.length === 4 &&
+      "One section-level WhatsApp enquiry link, correct number, properly encoded",
+      pkg.waLinks.length === 1 &&
         pkg.waLinks.every((l) => l.number === "/919835063448" && l.text.length > 10 && l.target === "_blank"),
       JSON.stringify(pkg.waLinks.map((l) => l.number)),
     );
     ok(
-      "Each WhatsApp message identifies its offering",
+      "The enquiry message names the confirmed packages and pricing",
       decoded.some((t) => /Complete Venue Package/.test(t)) &&
         decoded.some((t) => /Deluxe Catering/.test(t)) &&
-        decoded.some((t) => /Royal Catering/.test(t)) &&
-        decoded.some((t) => /non-vegetarian catering/i.test(t)),
-      JSON.stringify(decoded.map((t) => t.slice(0, 60))),
+        decoded.some((t) => /Royal Catering/.test(t)),
+      JSON.stringify(decoded.map((t) => t.slice(0, 80))),
     );
     ok(
-      "Offer enquiry links carry accessible labels",
-      offerLinks.every((l) => l.label.length > 15),
-      JSON.stringify(offerLinks.map((l) => l.label)),
+      "Enquiry link carries an accessible label",
+      pkg.waLinks.every((l) => l.label.length > 15),
+      JSON.stringify(pkg.waLinks.map((l) => l.label)),
     );
     ok(
       "No invented badges, discounts or countdowns",

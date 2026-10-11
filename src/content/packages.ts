@@ -20,8 +20,6 @@ export interface PackageOffer {
   /** How the price applies (e.g. "One-time venue price", "Per person"). */
   priceUnit: string;
   description: string;
-  /** Pre-filled WhatsApp message identifying the offering. */
-  enquiryMessage: string;
 }
 
 export const packagesSection = {
@@ -38,7 +36,6 @@ export const venuePackage: PackageOffer = {
   priceUnit: "One-time venue price",
   description:
     "Reserve Shri Sai Vatika for your celebration with a single venue booking. How the spaces are arranged for your date, and everything the booking includes, is confirmed personally when you enquire.",
-  enquiryMessage: `Namaste, I would like to enquire about the Complete Venue Package (₹1,60,000) at ${site.name}. Please share details, inclusions and available dates.`,
 };
 
 export const cateringPackages: readonly PackageOffer[] = [
@@ -49,7 +46,6 @@ export const cateringPackages: readonly PackageOffer[] = [
     priceUnit: "Per person",
     description:
       "Our Deluxe per-plate catering menu. The menu and what it includes are shared with you in full when you enquire.",
-    enquiryMessage: `Namaste, I would like to enquire about Deluxe Catering (₹849 per person) at ${site.name}. Please share the menu and details.`,
   },
   {
     id: "royal-catering",
@@ -58,7 +54,6 @@ export const cateringPackages: readonly PackageOffer[] = [
     priceUnit: "Per person",
     description:
       "Our Royal per-plate catering menu for celebrations that call for a grander spread. The menu and what it includes are shared in full when you enquire.",
-    enquiryMessage: `Namaste, I would like to enquire about Royal Catering (₹1,099 per person) at ${site.name}. Please share the menu and details.`,
   },
 ];
 
@@ -68,9 +63,11 @@ export const nonVegCatering = {
   priceNote: "Priced separately — no fixed rate is published",
   description:
     "Non-vegetarian catering is quoted separately from the Deluxe and Royal menus. Tell us your requirement and we will confirm the price.",
-  enquiryMessage: `Namaste, I would like to enquire about non-vegetarian catering at ${site.name}. Please share the pricing and details.`,
-  ctaLabel: "Enquire for Pricing",
 } as const;
+
+// One enquiry action for the whole section, offered after the options are
+// read. It names the confirmed pricing so the conversation starts informed.
+export const packagesEnquiryMessage = `Namaste, I would like to enquire about the packages at ${site.name} — the Complete Venue Package (₹1,60,000), Deluxe Catering (₹849 per person) and Royal Catering (₹1,099 per person). Please share details and availability.`;
 
 export const packagesNote =
   "Menus, inclusions and availability are shared in complete detail when you enquire — every celebration is planned personally with our team.";

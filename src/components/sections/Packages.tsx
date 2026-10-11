@@ -5,11 +5,12 @@ import { bookVisitHref } from "@/content/navigation";
 import {
   cateringPackages,
   nonVegCatering,
+  packagesEnquiryMessage,
   packagesNote,
   packagesSection,
   venuePackage,
 } from "@/content/packages";
-import { defaultEnquiryMessage, whatsappUrl } from "@/lib/whatsapp";
+import { whatsappUrl } from "@/lib/whatsapp";
 
 const fadeUp = {
   initial: { opacity: 0, y: 16 },
@@ -34,7 +35,7 @@ export default function Packages() {
           {/* Complete venue package — the anchor offering */}
           <motion.div
             {...fadeUp}
-            className="mt-12 border border-gold-muted/50 bg-primary-deep text-ivory"
+            className="mt-12 overflow-hidden rounded-panel border border-gold-muted/50 bg-primary-deep text-ivory"
           >
             <div className="grid gap-8 p-6 sm:p-10 md:grid-cols-2 md:items-center md:gap-12">
               <div>
@@ -53,15 +54,6 @@ export default function Packages() {
                 <p className="text-small mt-2 uppercase tracking-[0.18em] text-ivory/70">
                   {venuePackage.priceUnit}
                 </p>
-                <a
-                  href={whatsappUrl(venuePackage.enquiryMessage)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`Enquire about the ${venuePackage.name} on WhatsApp`}
-                  className="btn-text mt-6 inline-flex items-center justify-center border border-gold-muted/70 px-7 py-4 text-surface transition-colors hover:bg-surface/10 md:w-full"
-                >
-                  Enquire on WhatsApp
-                </a>
               </div>
             </div>
           </motion.div>
@@ -72,7 +64,7 @@ export default function Packages() {
               <motion.div
                 key={offer.id}
                 {...fadeUp}
-                className="flex flex-col gap-6 border border-border bg-surface p-6 sm:p-8"
+                className="flex flex-col gap-6 rounded-card border border-border bg-surface p-6 sm:p-8"
               >
                 <h3 className="font-display text-2xl text-primary-deep sm:text-3xl">
                   {offer.name}
@@ -86,15 +78,6 @@ export default function Packages() {
                     {offer.priceUnit}
                   </span>
                 </div>
-                <a
-                  href={whatsappUrl(offer.enquiryMessage)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`Enquire about ${offer.name} on WhatsApp`}
-                  className="btn-text inline-flex items-center justify-center border border-primary px-7 py-4 text-primary transition-colors hover:bg-primary hover:text-surface sm:self-start"
-                >
-                  Enquire on WhatsApp
-                </a>
               </motion.div>
             ))}
           </div>
@@ -102,48 +85,39 @@ export default function Packages() {
           {/* Non-vegetarian catering — quoted separately */}
           <motion.div
             {...fadeUp}
-            className="mt-6 border border-border bg-surface p-6 sm:p-8"
+            className="mt-6 rounded-card border border-border bg-surface p-6 sm:p-8"
           >
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="max-w-2xl">
-                <h3 className="font-display text-xl text-primary-deep sm:text-2xl">
-                  {nonVegCatering.name}
-                </h3>
-                <p className="text-small mt-1 uppercase tracking-[0.18em] text-muted-foreground">
-                  {nonVegCatering.priceNote}
-                </p>
-                <p className="text-body mt-3 text-muted-foreground">
-                  {nonVegCatering.description}
-                </p>
-              </div>
-              <a
-                href={whatsappUrl(nonVegCatering.enquiryMessage)}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`${nonVegCatering.ctaLabel} — ${nonVegCatering.name} on WhatsApp`}
-                className="btn-text inline-flex items-center justify-center border border-primary px-7 py-4 text-primary transition-colors hover:bg-primary hover:text-surface sm:shrink-0"
-              >
-                {nonVegCatering.ctaLabel}
-              </a>
+            <div className="max-w-2xl">
+              <h3 className="font-display text-xl text-primary-deep sm:text-2xl">
+                {nonVegCatering.name}
+              </h3>
+              <p className="text-small mt-1 uppercase tracking-[0.18em] text-muted-foreground">
+                {nonVegCatering.priceNote}
+              </p>
+              <p className="text-body mt-3 text-muted-foreground">
+                {nonVegCatering.description}
+              </p>
             </div>
           </motion.div>
 
           <p className="text-small mt-8 max-w-2xl text-muted-foreground">{packagesNote}</p>
 
+          {/* One enquiry action for the section, after the options are read. */}
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <a
-              href={bookVisitHref}
-              className="btn-text inline-flex items-center justify-center bg-primary px-7 py-4 text-surface transition-colors hover:bg-primary-deep"
-            >
-              Book a Visit
-            </a>
-            <a
-              href={whatsappUrl(defaultEnquiryMessage)}
+              href={whatsappUrl(packagesEnquiryMessage)}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="Enquire about packages at Shri Sai Vatika on WhatsApp"
+              className="btn-text inline-flex items-center justify-center bg-primary px-7 py-4 text-surface transition-colors hover:bg-primary-deep"
+            >
+              Enquire on WhatsApp
+            </a>
+            <a
+              href={bookVisitHref}
               className="btn-text inline-flex items-center justify-center border border-primary px-7 py-4 text-primary transition-colors hover:bg-primary hover:text-surface"
             >
-              Ask a Question
+              Book a Visit
             </a>
           </div>
         </div>
