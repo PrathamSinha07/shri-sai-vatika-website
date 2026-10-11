@@ -85,9 +85,13 @@ homepage section.
 - Packages: built (`Packages.tsx`), content in `src/content/packages.ts`.
   Client-confirmed pricing only — Complete Venue Package (₹1,60,000),
   Deluxe Catering (₹849/person), Royal Catering (₹1,099/person);
-  non-vegetarian catering is quoted separately. Each offering has a
-  pre-filled WhatsApp enquiry link; no inclusions, discounts or terms are
-  implied beyond what the client confirmed.
+  non-vegetarian catering is quoted separately. A single pre-filled
+  WhatsApp enquiry link closes the section; no inclusions, discounts or
+  terms are implied beyond what the client confirmed.
+- Announcement strip: built (`AnnouncementStrip.tsx`), content in
+  `src/content/announcements.ts`. A CSS-only marquee of confirmed
+  facilities/services sits between the Hero and the Intro section, with a
+  static wrapped fallback under `prefers-reduced-motion: reduce`.
 - Location: built (`Location.tsx`), address from `src/content/site.ts`,
   keyless Google Maps embed + directions links via `src/lib/maps.ts`
   (derived from the confirmed address — no invented coordinates).
@@ -96,7 +100,10 @@ homepage section.
   hours or social accounts exist in confirmed material.
 - Plan Your Visit: live booking form at `#book-a-visit` with
   `POST /api/visit-bookings` + availability endpoint; see
-  `docs/booking-system.md`. Owner dashboard intentionally not built.
+  `docs/booking-system.md`. The form collects name, phone, email, event
+  type, visit date and time slot (no free-text message field); the API
+  still accepts an optional `message` for compatibility.
+  Owner dashboard intentionally not built.
 - Director's Message: built (`Director.tsx`), content in
   `src/content/director.ts`.
 - Reviews/testimonials: intentionally deferred until genuine client-
