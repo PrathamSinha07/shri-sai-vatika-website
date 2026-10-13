@@ -69,7 +69,10 @@ export default function Hero() {
             transition={{ duration: 0.7, ease: "easeOut" }}
             className="max-w-2xl"
           >
-            <p className="flex items-center gap-3 text-[0.7rem] font-semibold uppercase tracking-[0.3em] text-gold-rich sm:text-xs">
+            {/* Brand line: sized ~12% above the old 0.7rem / text-xs scale so it
+                reads clearly over the photograph, still clearly subordinate to
+                the headline. Colour, tracking and the gold rule are unchanged. */}
+            <p className="flex items-center gap-3 text-[0.78rem] font-semibold uppercase tracking-[0.3em] text-gold-rich sm:text-[0.84rem]">
               <span aria-hidden="true" className="h-px w-8 bg-gold-rich/70 sm:w-12" />
               {site.shortName}
             </p>

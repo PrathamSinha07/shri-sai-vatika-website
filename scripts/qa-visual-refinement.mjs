@@ -65,11 +65,15 @@ try {
     );
 
     const headerCta = await page.evaluate(() => {
-      const cta = document.querySelector('header a[href="#book-a-visit"]');
+      // The desktop header CTA is the only btn-text inside <header>; the
+      // primary nav also links to #gallery, so match on the button class.
+      const cta = document.querySelector('header a.btn-text[href="#gallery"]');
       const cs = cta ? getComputedStyle(cta) : null;
       const header = document.querySelector("header");
       return {
         present: Boolean(cta),
+        label: (cta?.textContent ?? "").trim(),
+        href: cta?.getAttribute("href") ?? null,
         radius: cs?.borderRadius ?? null,
         height: cta ? Math.round(cta.getBoundingClientRect().height) : 0,
         headerBg: header ? getComputedStyle(header).backgroundColor : null,
@@ -79,6 +83,11 @@ try {
       `Header CTA present with rounded geometry (${vp.label})`,
       headerCta.present && Number.parseFloat(headerCta.radius ?? "0") > 0,
       JSON.stringify(headerCta),
+    );
+    ok(
+      `Header CTA is "Virtual Tour" pointing at the Gallery (${vp.label})`,
+      /virtual tour/i.test(headerCta.label) && headerCta.href === "#gallery",
+      JSON.stringify({ label: headerCta.label, href: headerCta.href }),
     );
     if (vp.label === "desktop") {
       await page.screenshot({ path: `${SHOTS}/hero-desktop-top.png` });
@@ -100,7 +109,7 @@ try {
     const layout = await page.evaluate(() => {
       const header = document.querySelector("header");
       const nav = header?.querySelector('nav[aria-label="Primary"]');
-      const cta = header?.querySelector('a[href="#book-a-visit"]');
+      const cta = header?.querySelector('a.btn-text[href="#gallery"]');
       const menuBtn = header?.querySelector('button[aria-controls="mobile-menu"]');
       const brand = header?.querySelector("a span");
       const navLinks = Array.from(nav?.querySelectorAll("a") ?? []).filter(

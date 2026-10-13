@@ -261,6 +261,49 @@ try {
       `scrollY ${rlY}, hash "${rlHash}"`,
     );
 
+    // g) Header "Virtual Tour" CTA: "#gallery" on the homepage and the
+    //    homepage-prefixed "/#gallery" from a service-detail page.
+    {
+      const homeCtx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+      const homePage = await homeCtx.newPage();
+      await homePage.goto(`${BASE}/`, { waitUntil: "networkidle" });
+      const homeCta = homePage.locator("header a.btn-text").first();
+      const homeHref = await homeCta.getAttribute("href");
+      const homeLabel = ((await homeCta.textContent()) ?? "").trim();
+      await homePage.locator('header a.btn-text[href="#gallery"]').click({ noWaitAfter: true });
+      await scrollSettles(homePage, 5000);
+      await homePage.waitForTimeout(400);
+      const homeTop = await homePage.evaluate(
+        () => Math.round(document.getElementById("gallery")?.getBoundingClientRect().top ?? -999),
+      );
+      ok(
+        `Header "Virtual Tour" on / reaches the Gallery`,
+        homeHref === "#gallery" &&
+          /virtual tour/i.test(homeLabel) &&
+          homeTop > -100 && homeTop < 400,
+        `href=${homeHref}, label=${homeLabel}, #gallery top=${homeTop}`,
+      );
+      await homeCtx.close();
+
+      const svcCtx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+      const svcPage = await svcCtx.newPage();
+      await svcPage.goto(`${BASE}/services/catering`, { waitUntil: "networkidle" });
+      const svcHref = await svcPage.locator("header a.btn-text").first().getAttribute("href");
+      await svcPage.locator('header a.btn-text[href="/#gallery"]').click({ noWaitAfter: true });
+      await svcPage.waitForURL((url) => url.pathname === "/");
+      await scrollSettles(svcPage, 5000);
+      await svcPage.waitForTimeout(400);
+      const svcTop = await svcPage.evaluate(
+        () => Math.round(document.getElementById("gallery")?.getBoundingClientRect().top ?? -999),
+      );
+      ok(
+        `Header "Virtual Tour" from /services/catering reaches the homepage Gallery`,
+        svcHref === "/#gallery" && svcTop > -100 && svcTop < 400,
+        `href=${svcHref}, #gallery top=${svcTop}`,
+      );
+      await svcCtx.close();
+    }
+
     await ctx.close();
   }
 

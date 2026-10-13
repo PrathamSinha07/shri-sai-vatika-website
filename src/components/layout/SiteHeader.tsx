@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { navLinks, bookVisitHref } from "@/content/navigation";
+import { navLinks, bookVisitHref, virtualTourHref } from "@/content/navigation";
 import { site } from "@/content/site";
 
 export default function SiteHeader({ overlay }: { overlay?: boolean }) {
@@ -101,14 +101,14 @@ export default function SiteHeader({ overlay }: { overlay?: boolean }) {
           </nav>
 
           <Link
-            href={sectionHref(bookVisitHref)}
+            href={sectionHref(virtualTourHref)}
             className={`btn-text hidden lg:inline-flex items-center whitespace-nowrap px-5 py-2.5 transition-colors ${
               scrolled || !transparentOverlay
                 ? "bg-primary text-surface shadow-sm hover:bg-primary-deep"
                 : "border border-gold-rich/55 bg-ivory/10 text-ivory backdrop-blur-sm hover:bg-ivory hover:text-primary-deep"
             }`}
           >
-            Plan Your Visit
+            Virtual Tour
           </Link>
 
           <button
