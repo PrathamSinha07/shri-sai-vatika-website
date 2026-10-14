@@ -62,7 +62,7 @@ export default function Hero() {
         />
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[#3d1119]/20 mix-blend-multiply" />
 
-        <div className="mx-auto w-full max-w-6xl px-4 pb-14 pt-28 sm:px-6 md:pb-24">
+        <div className="mx-auto w-full max-w-6xl px-4 pb-20 pt-28 sm:px-6 md:pb-24">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
@@ -89,7 +89,7 @@ export default function Hero() {
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
               <a
                 href={bookVisitHref}
-                className="btn-text inline-flex items-center justify-center bg-primary px-7 py-4 text-surface ring-1 ring-inset ring-gold-rich/35 transition-colors hover:bg-primary-deep sm:px-8"
+                className="btn-text btn-primary ring-1 ring-inset ring-gold-rich/35 sm:px-8"
               >
                 Plan Your Celebration
               </a>
@@ -97,7 +97,7 @@ export default function Hero() {
                 href={whatsappUrl(tourMessage)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-text inline-flex items-center justify-center border border-gold-rich/60 px-7 py-4 text-ivory transition-colors hover:bg-ivory/12 hover:text-surface sm:px-8"
+                className="btn-text btn-outline-light sm:px-8"
               >
                 WhatsApp Us
               </a>

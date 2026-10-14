@@ -26,8 +26,10 @@ export const navLinks = [
 
 export const bookVisitHref = `#${sectionIds.bookVisit}`;
 
-// The header's "Virtual Tour" CTA opens the Gallery (the virtual walk-through
-// of the venue) — same homepage-prefixed treatment as every other section link.
+// The header's "Virtual Tour" CTA (desktop bar and the mobile menu) opens the
+// Gallery (the virtual walk-through of the venue) — same homepage-prefixed
+// treatment as every other section link: SiteHeader renders it as `#gallery`
+// on "/" and `/#gallery` from any other route.
 export const virtualTourHref = `#${sectionIds.gallery}`;
 
 // Gallery taxonomy (built: Gallery.tsx renders Photos / Videos tabs):

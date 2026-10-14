@@ -16,6 +16,20 @@ export default function SiteHeader({ overlay }: { overlay?: boolean }) {
   const transparentOverlay = overlay ?? isHome;
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  // The menu belongs to the route it was opened on: any navigation (link
+  // click or Back/Forward) closes it, so it can never be left open over a
+  // page it did not open on. Adjusting state during render is the React-
+  // recommended way to respond to a value that changed underneath us.
+  const [openedOnPath, setOpenedOnPath] = useState(pathname);
+  if (open && openedOnPath !== pathname) {
+    setOpenedOnPath(pathname);
+    setOpen(false);
+  }
+  const openMenu = () => {
+    setOpenedOnPath(pathname);
+    setOpen(true);
+  };
+  const closeMenu = () => setOpen(false);
   const closeRef = useRef<HTMLButtonElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -102,11 +116,7 @@ export default function SiteHeader({ overlay }: { overlay?: boolean }) {
 
           <Link
             href={sectionHref(virtualTourHref)}
-            className={`btn-text hidden lg:inline-flex items-center whitespace-nowrap px-5 py-2.5 transition-colors ${
-              scrolled || !transparentOverlay
-                ? "bg-primary text-surface shadow-sm hover:bg-primary-deep"
-                : "border border-gold-rich/55 bg-ivory/10 text-ivory backdrop-blur-sm hover:bg-ivory hover:text-primary-deep"
-            }`}
+            className={`btn-text hidden whitespace-nowrap lg:inline-flex ${scrolled || !transparentOverlay ? "btn-primary" : "btn-glass"}`}
           >
             Virtual Tour
           </Link>
@@ -114,11 +124,11 @@ export default function SiteHeader({ overlay }: { overlay?: boolean }) {
           <button
             type="button"
             ref={triggerRef}
-            className="lg:hidden inline-flex h-10 w-10 items-center justify-center text-current"
+            className="lg:hidden inline-flex h-11 w-11 items-center justify-center text-current"
             aria-expanded={open}
             aria-controls="mobile-menu"
             aria-label={open ? "Close menu" : "Open menu"}
-            onClick={() => setOpen(!open)}
+            onClick={open ? closeMenu : openMenu}
           >
             <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
               {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
@@ -141,9 +151,9 @@ export default function SiteHeader({ overlay }: { overlay?: boolean }) {
             <button
               type="button"
               ref={closeRef}
-              className="inline-flex h-10 w-10 items-center justify-center text-primary-deep"
+              className="inline-flex h-11 w-11 items-center justify-center text-primary-deep"
               aria-label="Close menu"
-              onClick={() => { setOpen(false); triggerRef.current?.focus(); }}
+              onClick={() => { closeMenu(); triggerRef.current?.focus(); }}
             >
               <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
                 <path d="M6 6l12 12M18 6L6 18" />
@@ -157,7 +167,7 @@ export default function SiteHeader({ overlay }: { overlay?: boolean }) {
                 <li key={link.href}>
                   <Link
                     href={sectionHref(link.href)}
-                    onClick={() => setOpen(false)}
+                    onClick={closeMenu}
                     className="font-display block border-b border-border py-3 text-2xl text-primary-deep"
                   >
                     {link.label}
@@ -170,10 +180,20 @@ export default function SiteHeader({ overlay }: { overlay?: boolean }) {
           <div className="px-6 pt-8">
             <Link
               href={sectionHref(bookVisitHref)}
-              onClick={() => setOpen(false)}
-              className="btn-text inline-flex w-full items-center justify-center bg-primary px-5 py-4 text-surface"
+              onClick={closeMenu}
+              className="btn-text btn-primary btn-block"
             >
               Plan Your Visit
+            </Link>
+            {/* The header's Virtual Tour CTA has no room in the compact bar —
+                it lives here instead, with the same homepage-aware href as
+                the desktop button (#gallery on /, /#gallery elsewhere). */}
+            <Link
+              href={sectionHref(virtualTourHref)}
+              onClick={closeMenu}
+              className="btn-text btn-outline btn-block mt-3"
+            >
+              Virtual Tour
             </Link>
             <p className="mt-4 text-small text-muted-foreground">
               {site.address.lines.join(", ")}
