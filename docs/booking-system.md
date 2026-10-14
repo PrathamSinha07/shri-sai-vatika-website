@@ -44,29 +44,54 @@ booking by id, read customer details, or read owner notes. Do not add one.
 - Public customer website: `/` (`#venue`, `#facilities`, `#services`,
   `#gallery`, `#packages`, `#location`, `#book-a-visit`, `#contact`).
   No dashboard links in navbar/footer/homepage, no customer login.
-- Private owner area (FUTURE milestone, not built): `/admin/login`,
-  `/admin`, `/admin/bookings`. No owner/admin UI is exposed anywhere on
-  the public site.
+- Private owner area (built, Milestone 9 — see
+  `docs/admin-dashboard.md`): `/admin/login`, `/admin`, `/admin/bookings`
+  and `/api/admin/**`. Supabase Auth **plus** a server-side owner
+  allowlist, verified on every protected page and API request. No owner or
+  admin UI is exposed anywhere on the public site.
 
 ## Booking ID / status lifecycle
 
-`PENDING` → (owner action, later) `CONFIRMED` → `COMPLETED`,
-`RESCHEDULED`, `CANCELLED`.
+```
+PENDING ──confirm──▶ CONFIRMED ──complete──▶ COMPLETED (terminal)
+   │                    │
+   ├─cancel─▶ CANCELLED (terminal)          RESCHEDULED ──confirm──▶ CONFIRMED
+   └─reschedule─▶ RESCHEDULED
+```
 
-## Owner dashboard (PLANNED — not built)
+## Owner dashboard (built — Milestone 9)
 
 Per booking: name, phone, email, event type, event date, visit date,
 slot, message, status, owner notes, created_at, updated_at.
-Actions: call, WhatsApp, confirm, reschedule, cancel, add notes.
-Reschedule/cancellation customer emails are planned with that milestone.
 
-Owner operations (view / confirm / reschedule / cancel / complete /
-notes) must all run server-side behind authentication **and** explicit
-owner/admin authorization. A future secure design:
+Server-enforced actions (`PATCH /api/admin/bookings/{id}`):
 
-/admin/login → Supabase Auth sign-in → authorization check (owner role
-claim or an owners table) → /admin, /admin/bookings. Logging in alone
-must not grant owner access.
+| Action | Allowed from | Writes |
+| --- | --- | --- |
+| `confirm` | `PENDING`, `RESCHEDULED` | `CONFIRMED` |
+| `cancel` | `PENDING`, `CONFIRMED`, `RESCHEDULED` | `CANCELLED` |
+| `complete` | `CONFIRMED` | `COMPLETED` |
+| `reschedule` | `PENDING`, `CONFIRMED`, `RESCHEDULED` | `RESCHEDULED` + new date/slot |
+
+`COMPLETED` and `CANCELLED` are terminal. The client never chooses the
+resulting status — it is derived server-side, and every write is a
+compare-and-swap against the state the owner was looking at, so stale
+tabs get a `409` instead of overwriting newer state. Rescheduling is a
+single atomic `UPDATE` guarded by the existing
+`UNIQUE (visit_date, time_slot)` index; no second booking table and no
+schema change were needed.
+
+Owner operations run server-side behind authentication **and** explicit
+owner authorization:
+
+/admin/login → Supabase Auth sign-in → server-side allowlist check
+(`ADMIN_OWNER_EMAILS`) → /admin, /admin/bookings. Logging in alone must
+not grant owner access, and it does not: a valid non-owner session is
+revoked and refused with `403`.
+
+Reschedule/cancellation customer emails are **not** implemented — they
+land in Milestone 10. Owner-action email delivery is not claimed anywhere
+in the UI.
 
 ## Emails (implemented)
 
@@ -89,7 +114,14 @@ must not grant owner access.
 
 ## Tests
 
-`npm test` runs `src/lib/booking/validate.test.ts` (13 cases: today
-rejected, tomorrow accepted, past rejected, slot validation,
-email/phone/required-field validation, duplicate-slot helper checks,
-honeypot, earliest-date helper).
+`npm test` runs:
+
+- `src/lib/booking/validate.test.ts` (13 cases: today rejected, tomorrow
+  accepted, past rejected, slot validation, email/phone/required-field
+  validation, duplicate-slot helper checks, honeypot, earliest-date
+  helper).
+- `src/lib/admin/transitions.test.ts` (owner action state machine:
+  eligible transitions, terminal states, server-chosen target statuses).
+
+`scripts/qa-admin.mjs` exercises the private dashboard end to end against a
+production build (see `docs/admin-dashboard.md`).

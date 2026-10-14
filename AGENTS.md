@@ -28,6 +28,8 @@ Production website for Shri Sai Vatika Banquet Hall, Patna.
 - `docs/architecture.md` — app structure and data flow
 - `docs/component-boundaries.md` — reusable UI vs. business sections
 - `docs/database-schema.md` — Supabase schema for enquiries/tour requests
+- `docs/booking-system.md` — visit-booking rules and status lifecycle
+- `docs/admin-dashboard.md` — private owner dashboard, auth + authorization
 - `docs/enquiry-email-workflow.md` — enquiry → Supabase → Resend flow
 - `docs/environment-variables.md` — required env vars
 

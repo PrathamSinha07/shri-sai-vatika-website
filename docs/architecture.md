@@ -16,26 +16,33 @@
 ```
 src/
   app/
-    layout.tsx          # root layout (fonts, metadata, skip link)
-    page.tsx            # homepage (composed of sections)
+    layout.tsx          # root layout (fonts, metadata) — no page chrome
     globals.css         # design tokens + tailwind theme
+    (public)/           # customer site: public navbar/footer/WhatsApp chrome
+      layout.tsx
+      page.tsx          # homepage (composed of sections)
+      services/         # /services and /services/[slug]
+    admin/              # PRIVATE owner dashboard (see docs/admin-dashboard.md)
+      login/            # /admin/login (public sign-in)
+      (dashboard)/      # /admin and /admin/bookings (authorized owners only)
     api/
-      enquiries/route.ts  # POST: store enquiry, send emails
-      admin/...           # admin session + enquiry listing (later milestone)
-    admin/              # simple admin interface (later milestone)
+      visit-bookings/   # public booking + availability
+      admin/            # private auth + booking-management APIs
   components/
     ui/                 # reusable, business-agnostic primitives
     sections/           # homepage/page sections composed from ui + content
-    layout/             # header, footer, whatsapp float, skip link
+    layout/             # public header, footer, whatsapp float
+    admin/              # private dashboard UI (never imported by public pages)
   content/              # ALL business info: site.ts, facilities.ts, packages.ts
   lib/
     env.ts              # validated env access
-    supabase/           # server client
+    admin/              # auth, session guards, transitions, booking data access
+    supabase/           # server client (service role, server-only)
     email/              # resend client + templates
+    booking/            # visit-booking validation rules
     maps.ts             # google maps url builders
     whatsapp.ts         # click-to-chat url builder
     utils.ts
-  types/                # shared TS types
 public/
   images/               # real venue photography
 supabase/
@@ -49,11 +56,12 @@ docs/
   `#services`, `#gallery`, `#packages`, `#location`, `#book-a-visit`,
   `#contact`. Public without an account; no dashboard links anywhere in
   the UI.
-- **Private** owner area (future milestone, not built): `/admin/login`,
-  `/admin`, `/admin/bookings`, behind Supabase Auth plus explicit
-  owner/admin authorization. The previous architecture's
-  `api/admin/...` placeholders were never implemented and must not be
-  exposed publicly.
+- **Private** owner area: `/admin/login` (public sign-in), `/admin`,
+  `/admin/bookings`, and `/api/admin/**`. Behind Supabase Auth **plus** an
+  explicit server-side owner allowlist (`ADMIN_OWNER_EMAILS`), verified on
+  every protected page and API request — a valid login alone is never
+  enough. No signup flow exists, and the area is not linked from any public
+  page. See `docs/admin-dashboard.md`.
 
 ## Data flow (enquiry)
 

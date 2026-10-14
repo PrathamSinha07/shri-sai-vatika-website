@@ -9,6 +9,7 @@ Copy `.env.example` to `.env.local` and fill values. Never commit real secrets.
 | `NEXT_PUBLIC_GOOGLE_MAPS_URL` | public | Google Maps place link |
 | `SUPABASE_URL` | server | Supabase project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | server | Server-side inserts (never expose) |
+| `ADMIN_OWNER_EMAILS` | server | Comma-separated owner allowlist for `/admin` (fails closed when unset) |
 | `RESEND_API_KEY` | server | Resend API key |
 | `ENQUIRY_NOTIFY_EMAIL` | server | Manager notification inbox |
 | `BOOKING_NOTIFY_EMAIL` | server | Owner inbox for new visit requests (falls back to `ENQUIRY_NOTIFY_EMAIL`) |

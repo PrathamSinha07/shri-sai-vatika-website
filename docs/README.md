@@ -8,7 +8,8 @@ Project docs for the Shri Sai Vatika website.
 | `component-boundaries.md` | What is a reusable UI component vs. a business section |
 | `database-schema.md` | Supabase schema for enquiries and tour requests |
 | `enquiry-email-workflow.md` | Enquiry submission → persistence → emails |
-| `booking-system.md` | Planned visit-booking flow, slots, statuses, dashboard |
+| `booking-system.md` | Visit-booking flow, slots, statuses, owner actions |
+| `admin-dashboard.md` | Private owner dashboard: auth, authorization, actions, QA |
 | `environment-variables.md` | Required environment variables |
 
 Business claims (capacity, pricing, services) are client-provided and must be

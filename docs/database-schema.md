@@ -26,10 +26,13 @@ Stores booking and tour requests submitted through the site.
 - RLS enabled on `enquiries`/`visit_bookings`.
 - No public select/insert via anon key from clients; the site writes through
   the server route using the service role key.
-- Admin reads happen server-side only.
-- Future owner access via Supabase Auth + explicit owner/admin
-  authorization; anonymous visitors can only submit bookings and read
-  slot availability (never customer records).
+- Owner reads/updates happen server-side only, behind Supabase Auth **plus**
+  the `ADMIN_OWNER_EMAILS` allowlist (`docs/admin-dashboard.md`). RLS was
+  not changed and no role/membership table was added — the dashboard reuses
+  the service-role path after explicit authorization, so authenticated
+  users still have no table access of their own.
+- Anonymous visitors can only submit bookings and read slot availability
+  (never customer records).
 - The service role key must never appear in `NEXT_PUBLIC_*` vars or be
   returned by any API route.
 
