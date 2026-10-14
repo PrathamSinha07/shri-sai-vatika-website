@@ -24,7 +24,7 @@ export default function LogoutButton() {
       type="button"
       onClick={handleLogout}
       disabled={busy}
-      className="rounded-control border border-gold-rich/55 px-3 py-1.5 text-small font-semibold uppercase tracking-[0.08em] text-ivory transition-colors hover:bg-ivory/12 disabled:opacity-60"
+      className="btn-text btn-outline-light"
     >
       {busy ? "Signing out…" : "Sign out"}
     </button>

@@ -32,7 +32,7 @@ export default function ServicesIndexPage() {
               className="group block"
               aria-label={`Learn more about ${service.title}`}
             >
-              <div className="relative overflow-hidden">
+              <div className="relative overflow-hidden rounded-card">
                 <Image
                   src={service.image}
                   alt={service.imageAlt}

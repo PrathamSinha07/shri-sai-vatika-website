@@ -393,7 +393,7 @@ export default function BookingsView() {
                       <button
                         type="button"
                         onClick={() => toggleSort(column.field)}
-                        className="inline-flex items-center gap-1 font-semibold uppercase tracking-[0.08em] hover:text-foreground"
+                        className="inline-flex items-center gap-1 py-1.5 font-semibold uppercase tracking-[0.08em] hover:text-foreground"
                       >
                         {column.label}
                         <span aria-hidden="true">
@@ -419,7 +419,7 @@ export default function BookingsView() {
                       <button
                         type="button"
                         onClick={() => toggleSort(column.field)}
-                        className="inline-flex items-center gap-1 font-semibold uppercase tracking-[0.08em] hover:text-foreground"
+                        className="inline-flex items-center gap-1 py-1.5 font-semibold uppercase tracking-[0.08em] hover:text-foreground"
                       >
                         {column.label}
                         <span aria-hidden="true">
@@ -455,7 +455,7 @@ export default function BookingsView() {
                       <button
                         type="button"
                         onClick={(event) => openDetail(booking, event.currentTarget)}
-                        className="rounded-control border border-primary px-3 py-1.5 font-semibold uppercase tracking-[0.06em] text-primary transition-colors hover:bg-primary hover:text-surface"
+                        className="btn-text btn-outline"
                       >
                         View<span className="sr-only"> booking from {booking.customerName}</span>
                       </button>
@@ -490,7 +490,7 @@ export default function BookingsView() {
                 <button
                   type="button"
                   onClick={(event) => openDetail(booking, event.currentTarget)}
-                  className="rounded-control mt-3 w-full border border-primary px-3 py-2.5 font-semibold uppercase tracking-[0.06em] text-primary transition-colors hover:bg-primary hover:text-surface"
+                  className="btn-text btn-outline btn-block mt-3"
                 >
                   View booking
                 </button>
@@ -507,7 +507,7 @@ export default function BookingsView() {
                 type="button"
                 onClick={() => setPage((current) => Math.max(1, current - 1))}
                 disabled={page <= 1 || loading}
-                className="rounded-control border border-border bg-surface px-3 py-2 text-small font-semibold disabled:opacity-50"
+                className="btn-text btn-quiet"
               >
                 Previous
               </button>
@@ -515,7 +515,7 @@ export default function BookingsView() {
                 type="button"
                 onClick={() => setPage((current) => current + 1)}
                 disabled={page >= (data?.pageCount ?? 1) || loading}
-                className="rounded-control border border-border bg-surface px-3 py-2 text-small font-semibold disabled:opacity-50"
+                className="btn-text btn-quiet"
               >
                 Next
               </button>
@@ -546,7 +546,7 @@ export default function BookingsView() {
                 type="button"
                 onClick={closeDetail}
                 aria-label="Close booking details"
-                className="rounded-control border border-border px-2.5 py-1.5 text-small font-semibold"
+                className="btn-text btn-quiet"
               >
                 Close
               </button>
@@ -631,7 +631,7 @@ export default function BookingsView() {
                             type="button"
                             disabled={actionBusy}
                             onClick={() => runAction(action)}
-                            className="rounded-control bg-primary px-4 py-2.5 text-small font-semibold uppercase tracking-[0.06em] text-surface transition-colors hover:bg-primary-deep disabled:opacity-60"
+                            className="btn-text btn-primary"
                           >
                             {ACTION_LABELS[action]}
                           </button>
@@ -681,7 +681,7 @@ export default function BookingsView() {
                               <button
                                 type="submit"
                                 disabled={actionBusy || !newDate}
-                                className="rounded-control bg-primary px-4 py-2.5 text-small font-semibold uppercase tracking-[0.06em] text-surface hover:bg-primary-deep disabled:opacity-60"
+                                className="btn-text btn-primary"
                               >
                                 {actionBusy ? "Rescheduling…" : "Save new slot"}
                               </button>
@@ -689,7 +689,7 @@ export default function BookingsView() {
                                 type="button"
                                 disabled={actionBusy}
                                 onClick={() => setRescheduling(false)}
-                                className="rounded-control border border-border px-4 py-2.5 text-small font-semibold"
+                                className="btn-text btn-quiet"
                               >
                                 Keep current slot
                               </button>
@@ -704,7 +704,7 @@ export default function BookingsView() {
                               setNewSlot(BOOKING_TIME_SLOTS[0]);
                               setRescheduling(true);
                             }}
-                            className="rounded-control border border-primary px-4 py-2.5 text-small font-semibold uppercase tracking-[0.06em] text-primary transition-colors hover:bg-primary hover:text-surface disabled:opacity-60"
+                            className="btn-text btn-outline"
                           >
                             Reschedule
                           </button>
@@ -720,7 +720,7 @@ export default function BookingsView() {
                               type="button"
                               disabled={actionBusy}
                               onClick={() => runAction("cancel")}
-                              className="rounded-control bg-[#8a2222] px-4 py-2.5 text-small font-semibold uppercase tracking-[0.06em] text-white hover:bg-[#6d1a1a] disabled:opacity-60"
+                              className="btn-text btn-danger"
                             >
                               {actionBusy ? "Cancelling…" : "Yes, cancel this booking"}
                             </button>
@@ -728,7 +728,7 @@ export default function BookingsView() {
                               type="button"
                               disabled={actionBusy}
                               onClick={() => setConfirmingCancel(false)}
-                              className="rounded-control border border-border px-4 py-2.5 text-small font-semibold"
+                              className="btn-text btn-quiet"
                             >
                               Keep booking
                             </button>
@@ -738,7 +738,7 @@ export default function BookingsView() {
                             type="button"
                             disabled={actionBusy}
                             onClick={() => setConfirmingCancel(true)}
-                            className="rounded-control border border-[#e3bbbb] px-4 py-2.5 text-small font-semibold uppercase tracking-[0.06em] text-[#8a2222] transition-colors hover:bg-[#f8e7e7] disabled:opacity-60"
+                            className="btn-text btn-danger-outline"
                           >
                             Cancel booking
                           </button>

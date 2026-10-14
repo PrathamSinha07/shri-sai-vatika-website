@@ -86,13 +86,148 @@ body {
     color: var(--color-primary);
   }
 
+  /*
+    Buttons — one geometry, a small set of skins.
+
+    `.btn-text` is the site-wide control base (kept under its historical name
+    because the QA scripts use it to find button-style CTAs). It fixes the
+    geometry every button shares: 44px minimum height, 12px/24px padding,
+    6px control radius, 14px/600 uppercase label, and the shared transition.
+    Each button then takes exactly one skin class:
+
+      btn-primary        deep maroon, solid — the default primary action
+      btn-outline        maroon hairline on ivory — secondary actions
+      btn-outline-light  gold hairline — actions on photography / dark bars
+      btn-glass          translucent ivory/gold — header CTA over the hero
+      btn-quiet          neutral panel — admin secondary actions
+      btn-danger         solid destructive admin action
+      btn-danger-outline destructive admin action, confirm-style
+
+    Disabled and aria-disabled states are handled once, below. Focus uses the
+    global gold :focus-visible ring. Links that are not controls (nav items,
+    inline sentence links) must not carry `.btn-text`.
+  */
   .btn-text {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem; /* 44px touch target */
+    padding: 0.75rem 1.5rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
     font-size: var(--text-button);
     line-height: var(--text-button--line-height);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     font-weight: 600;
-    border-radius: var(--radius-control);
+    text-align: center;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease,
+      opacity 0.2s ease;
+  }
+
+  .btn-text:disabled,
+  .btn-text[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .btn-primary {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-surface);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background-color: var(--color-primary-deep);
+    border-color: var(--color-primary-deep);
+  }
+
+  .btn-primary:active:not(:disabled) {
+    background-color: var(--color-primary-deep);
+    border-color: var(--color-primary-deep);
+  }
+
+  .btn-outline {
+    background-color: transparent;
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  .btn-outline:hover:not(:disabled) {
+    background-color: var(--color-primary);
+    color: var(--color-surface);
+  }
+
+  .btn-outline:active:not(:disabled) {
+    background-color: var(--color-primary-deep);
+    border-color: var(--color-primary-deep);
+    color: var(--color-surface);
+  }
+
+  /* On photography and on the deep-maroon admin bar. */
+  .btn-outline-light {
+    background-color: transparent;
+    border-color: rgb(226 182 74 / 0.6); /* gold-rich */
+    color: var(--color-ivory);
+  }
+
+  .btn-outline-light:hover:not(:disabled) {
+    background-color: rgb(245 234 210 / 0.12); /* ivory */
+    color: var(--color-surface);
+  }
+
+  .btn-glass {
+    background-color: rgb(245 234 210 / 0.1);
+    border-color: rgb(226 182 74 / 0.55);
+    color: var(--color-ivory);
+    backdrop-filter: blur(4px);
+  }
+
+  .btn-glass:hover:not(:disabled) {
+    background-color: var(--color-ivory);
+    color: var(--color-primary-deep);
+  }
+
+  .btn-quiet {
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--color-foreground);
+  }
+
+  .btn-quiet:hover:not(:disabled) {
+    background-color: var(--color-background);
+    border-color: var(--color-gold);
+  }
+
+  /* Destructive actions (admin booking cancellation). */
+  .btn-danger {
+    background-color: #8a2222;
+    border-color: #8a2222;
+    color: #ffffff;
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background-color: #6d1a1a;
+    border-color: #6d1a1a;
+  }
+
+  .btn-danger-outline {
+    background-color: transparent;
+    border-color: #e3bbbb;
+    color: #8a2222;
+  }
+
+  .btn-danger-outline:hover:not(:disabled) {
+    background-color: #f8e7e7;
+  }
+
+  .btn-block {
+    width: 100%;
   }
 
   .footer-heading {

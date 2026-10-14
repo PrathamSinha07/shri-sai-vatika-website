@@ -171,7 +171,7 @@ export default function Gallery() {
                   aria-controls={`gallery-panel-${TAB_KEYS[index]}`}
                   tabIndex={activeTab === index ? 0 : -1}
                   onClick={() => selectTab(index)}
-                  className={`-mb-px border-b-2 pb-3 font-display text-lg transition-colors duration-200 ${
+                  className={`-mb-px min-h-11 border-b-2 pb-3 font-display text-lg transition-colors duration-200 ${
                     activeTab === index
                       ? "border-primary text-primary-deep"
                       : "border-transparent text-muted-foreground hover:text-foreground"

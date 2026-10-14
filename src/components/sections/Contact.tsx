@@ -109,7 +109,7 @@ export default function Contact() {
                   {...(card.external
                     ? { target: "_blank", rel: "noopener noreferrer" }
                     : {})}
-                  className="btn-text mt-auto inline-flex items-center justify-center border border-primary px-6 py-4 text-primary transition-colors hover:bg-primary hover:text-surface sm:self-start"
+                  className="btn-text btn-outline mt-auto sm:self-start"
                 >
                   {card.copy.ctaLabel}
                 </a>
@@ -140,7 +140,7 @@ export default function Contact() {
                 href={googleMapsDirectionsUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-text mt-4 inline-flex items-center justify-center border border-primary px-6 py-4 text-primary transition-colors hover:bg-primary hover:text-surface"
+                className="btn-text btn-outline mt-4"
               >
                 {contactClosing.directionsLabel} →
               </a>

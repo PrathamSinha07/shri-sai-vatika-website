@@ -51,7 +51,7 @@ export default async function AdminOverviewPage() {
         </div>
         <Link
           href="/admin/bookings"
-          className="btn-text rounded-control border border-primary px-4 py-2.5 text-primary transition-colors hover:bg-primary hover:text-surface"
+          className="btn-text btn-outline"
         >
           Manage bookings
         </Link>

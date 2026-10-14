@@ -32,7 +32,7 @@ export default function Intro() {
               href={whatsappUrl(tourMessage)}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-text mt-8 inline-flex items-center gap-2 border-b border-gold pb-1 text-primary transition-colors hover:text-primary-deep"
+              className="mt-8 inline-flex items-center gap-2 border-b border-gold pb-1 text-sm font-semibold uppercase leading-none tracking-[0.08em] text-primary transition-colors hover:text-primary-deep"
             >
               Request a Tour →
             </a>

@@ -143,14 +143,11 @@ export default async function ServicePage({
                 href={whatsappUrl(enquiryMessage)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-text inline-flex items-center justify-center bg-primary px-7 py-4 text-surface transition-colors hover:bg-primary-deep"
+                className="btn-text btn-primary"
               >
                 Enquire on WhatsApp
               </a>
-              <Link
-                href="/#book-a-visit"
-                className="btn-text inline-flex items-center justify-center border border-primary px-7 py-4 text-primary transition-colors hover:bg-primary hover:text-surface"
-              >
+              <Link href="/#book-a-visit" className="btn-text btn-outline">
                 Book a Visit
               </Link>
             </div>

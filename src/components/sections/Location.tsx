@@ -52,7 +52,7 @@ export default function Location() {
                   href={googleMapsDirectionsUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-text inline-flex items-center justify-center gap-2 bg-primary px-7 py-4 text-surface transition-colors hover:bg-primary-deep"
+                  className="btn-text btn-primary"
                 >
                   <svg
                     viewBox="0 0 24 24"
@@ -69,10 +69,7 @@ export default function Location() {
                   </svg>
                   {locationSection.directionsLabel}
                 </a>
-                <a
-                  href={bookVisitHref}
-                  className="btn-text inline-flex items-center justify-center border border-primary px-7 py-4 text-primary transition-colors hover:bg-primary hover:text-surface"
-                >
+                <a href={bookVisitHref} className="btn-text btn-outline">
                   Plan a Visit
                 </a>
               </div>

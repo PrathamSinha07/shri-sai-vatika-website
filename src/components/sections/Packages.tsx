@@ -109,14 +109,11 @@ export default function Packages() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Enquire about packages at Shri Sai Vatika on WhatsApp"
-              className="btn-text inline-flex items-center justify-center bg-primary px-7 py-4 text-surface transition-colors hover:bg-primary-deep"
+              className="btn-text btn-primary"
             >
               Enquire on WhatsApp
             </a>
-            <a
-              href={bookVisitHref}
-              className="btn-text inline-flex items-center justify-center border border-primary px-7 py-4 text-primary transition-colors hover:bg-primary hover:text-surface"
-            >
+            <a href={bookVisitHref} className="btn-text btn-outline">
               Book a Visit
             </a>
           </div>

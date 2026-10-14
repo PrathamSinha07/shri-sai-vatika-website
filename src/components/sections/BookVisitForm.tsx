@@ -147,14 +147,11 @@ export default function BookVisitForm() {
             )}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-text inline-flex items-center justify-center bg-primary px-7 py-4 text-surface transition-colors hover:bg-primary-deep"
+            className="btn-text btn-primary"
           >
             WhatsApp Us
           </a>
-          <a
-            href={site.phoneHref}
-            className="btn-text inline-flex items-center justify-center border border-primary px-7 py-4 text-primary transition-colors hover:bg-primary hover:text-surface"
-          >
+          <a href={site.phoneHref} className="btn-text btn-outline">
             Call Us
           </a>
         </div>
@@ -163,7 +160,7 @@ export default function BookVisitForm() {
   }
 
   const inputClass =
-    "w-full rounded-control border border-border bg-surface px-4 py-3 text-body text-foreground placeholder:text-muted-foreground/70 focus:border-gold focus:outline-none";
+    "w-full rounded-control border border-border bg-surface px-4 py-3 text-body text-foreground placeholder:text-muted-foreground/70 focus:border-gold";
   const errorClass = "mt-1 text-small text-primary";
 
   return (
@@ -307,7 +304,7 @@ export default function BookVisitForm() {
       <button
         type="submit"
         disabled={status === "submitting"}
-        className="btn-text mt-8 inline-flex w-full items-center justify-center bg-primary px-7 py-4 text-surface transition-colors hover:bg-primary-deep disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+        className="btn-text btn-primary mt-8 w-full sm:w-auto"
       >
         {status === "submitting" ? "Submitting…" : "Request Visit"}
       </button>
@@ -324,7 +321,7 @@ export default function BookVisitForm() {
         )}
         target="_blank"
         rel="noopener noreferrer"
-        className="btn-text mt-2 inline-flex items-center border border-primary px-7 py-3 text-primary transition-colors hover:bg-primary hover:text-surface"
+        className="btn-text btn-outline mt-3 w-full sm:w-auto"
       >
         WhatsApp Us
       </a>
