@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test src/lib/booking/validate.test.ts"
+    "test": "tsx --test src/lib/booking/validate.test.ts src/lib/admin/transitions.test.ts"
   },
   "dependencies": {
     "motion": "^14.0.0",
