@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getBookedSlots, BookingStoreError } from "@/lib/supabase/server";
+import { getSlotAvailability, BookingStoreError } from "@/lib/supabase/server";
 import { isValidDateString, isBookableDate } from "@/lib/booking/validate";
 
 export async function GET(request: Request) {
@@ -14,10 +14,12 @@ export async function GET(request: Request) {
   }
 
   try {
-    const booked = await getBookedSlots(date);
-    // Availability only exposes taken slot labels — never customer data.
+    const { capacity, booked, remaining } = await getSlotAvailability(date);
+    // Availability only exposes slot labels, capacity and remaining counts —
+    // never customer data. `booked` (slots with no room left) is kept for
+    // existing consumers.
     return NextResponse.json(
-      { ok: true, booked },
+      { ok: true, booked, capacity, remaining },
       { headers: { "Cache-Control": "no-store" } }
     );
   } catch (err) {

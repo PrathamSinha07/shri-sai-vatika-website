@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { validateBookingInput } from "@/lib/booking/validate";
+import { isSlotFull, slotCapacity } from "@/lib/booking/capacity";
 import {
+  countActiveBookings,
   insertVisitBooking,
-  isSlotAvailable,
   BookingStoreError,
   SlotUnavailableError,
 } from "@/lib/supabase/server";
@@ -34,12 +35,15 @@ export async function POST(request: Request) {
   const data = result.data;
 
   try {
-    if (!(await isSlotAvailable(data.visitDate, data.timeSlot))) {
+    // Friendly capacity pre-check. The slot-capacity trigger inside
+    // PostgreSQL is the atomic final arbiter: if a concurrent request wins
+    // the race, the insert below fails with SlotUnavailableError.
+    if (isSlotFull(await countActiveBookings(data.visitDate, data.timeSlot), slotCapacity())) {
       return NextResponse.json(
         {
           ok: false,
           error:
-            "This time slot is no longer available. Please choose another slot.",
+            "This time slot is fully booked. Please choose another slot.",
         },
         { status: 409 }
       );
@@ -99,7 +103,7 @@ export async function POST(request: Request) {
         {
           ok: false,
           error:
-            "This time slot has just been booked. Please select another slot.",
+            "This time slot has just filled up. Please select another slot.",
         },
         { status: 409 }
       );

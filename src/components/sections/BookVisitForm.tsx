@@ -11,6 +11,7 @@ type Status = "idle" | "submitting" | "success" | "error";
 export default function BookVisitForm() {
   const [visitDate, setVisitDate] = useState("");
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const [remaining, setRemaining] = useState<Record<string, number> | null>(null);
   const [availabilityError, setAvailabilityError] = useState(false);
   const [timeSlot, setTimeSlot] = useState("");
   const [eventType, setEventType] = useState("");
@@ -42,16 +43,18 @@ export default function BookVisitForm() {
       .then(async (res) => {
         const json = await res.json().catch(() => null);
         if (!res.ok || !json?.ok) throw new Error("unavailable");
-        return json.booked as string[];
+        return { booked: json.booked as string[], remaining: (json.remaining ?? null) as Record<string, number> | null };
       })
-      .then((booked) => {
+      .then((info) => {
         if (!active) return;
-        setBookedSlots(booked);
-        setTimeSlot((current) => (booked.includes(current) ? "" : current));
+        setBookedSlots(info.booked);
+        setRemaining(info.remaining);
+        setTimeSlot((current) => (info.booked.includes(current) ? "" : current));
       })
       .catch(() => {
         if (!active) return;
         setBookedSlots([]);
+        setRemaining(null);
         setAvailabilityError(true);
       });
     return () => {
@@ -97,13 +100,14 @@ export default function BookVisitForm() {
           json?.error ?? "We couldn't submit your request right now. Please try again."
         );
       }
-      // Slot conflict / unavailable: refresh availability for that date.
+      // Slot at capacity / unavailable: refresh availability for that date.
       if (res.status === 409 && visitDate) {
         fetch(`/api/visit-bookings/availability?date=${encodeURIComponent(visitDate)}`)
           .then(async (r) => {
             const j = await r.json().catch(() => null);
             if (r.ok && j?.ok) {
               setBookedSlots(j.booked as string[]);
+              setRemaining((j.remaining ?? null) as Record<string, number> | null);
               setTimeSlot("");
             }
           })
@@ -243,6 +247,7 @@ export default function BookVisitForm() {
             setVisitDate(e.target.value);
             setTimeSlot("");
             setBookedSlots([]);
+            setRemaining(null);
             setAvailabilityError(false);
           }}
           className={`${inputClass} mt-2`}
@@ -270,6 +275,14 @@ export default function BookVisitForm() {
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {BOOKING_TIME_SLOTS.map((slot) => {
             const booked = bookedSlots.includes(slot);
+            const open = remaining?.[slot];
+            const statusText = booked
+              ? "Full"
+              : timeSlot === slot
+                ? "Selected"
+                : typeof open === "number"
+                  ? `${open} spot${open === 1 ? "" : "s"} open`
+                  : "Available";
             return (
               <label
                 key={slot}
@@ -291,9 +304,7 @@ export default function BookVisitForm() {
                   className="sr-only"
                 />
                 <span>{slot}</span>
-                <span className="text-[0.7rem] uppercase tracking-wider">
-                  {booked ? "Booked" : timeSlot === slot ? "Selected" : "Available"}
-                </span>
+                <span className="text-[0.7rem] uppercase tracking-wider">{statusText}</span>
               </label>
             );
           })}
