@@ -83,6 +83,106 @@ Phone: 98350 63448`;
   return { subject, html, text };
 }
 
+export function customerConfirmedEmail(b: {
+  customerName: string;
+  visitDate: string;
+  timeSlot: string;
+  eventType: string;
+}): { subject: string; html: string; text: string } {
+  const subject = "Your visit is confirmed — Shri Sai Vatika";
+  const text = `Namaste ${b.customerName},
+
+Your visit to Shri Sai Vatika Banquet Hall is confirmed:
+- Visit date: ${b.visitDate}
+- Time slot: ${b.timeSlot}
+- Event type: ${b.eventType}
+
+We look forward to welcoming you. Please reach out by phone or WhatsApp if you need any assistance.
+
+Warm regards,
+Shri Sai Vatika Banquet Hall
+Phone: 98350 63448`;
+  const html = layout(`
+  <p>Namaste ${escapeHtml(b.customerName)},</p>
+  <p>Your visit to Shri Sai Vatika Banquet Hall is confirmed:</p>
+  <ul>
+    <li><strong>Visit date:</strong> ${escapeHtml(b.visitDate)}</li>
+    <li><strong>Time slot:</strong> ${escapeHtml(b.timeSlot)}</li>
+    <li><strong>Event type:</strong> ${escapeHtml(b.eventType)}</li>
+  </ul>
+  <p>We look forward to welcoming you. Please reach out by phone or WhatsApp if you need any assistance.</p>
+  <p>Warm regards,<br/>Shri Sai Vatika Banquet Hall<br/>Phone: 98350 63448</p>`);
+  return { subject, html, text };
+}
+
+export function customerCancelledEmail(b: {
+  customerName: string;
+  visitDate: string;
+  timeSlot: string;
+  eventType: string;
+}): { subject: string; html: string; text: string } {
+  const subject = "Your visit has been cancelled — Shri Sai Vatika";
+  const text = `Namaste ${b.customerName},
+
+Your visit request for Shri Sai Vatika Banquet Hall has been cancelled:
+- Visit date: ${b.visitDate}
+- Time slot: ${b.timeSlot}
+- Event type: ${b.eventType}
+
+If this was not expected, or you would like to pick a new date, please call us or message us on WhatsApp.
+
+Warm regards,
+Shri Sai Vatika Banquet Hall
+Phone: 98350 63448`;
+  const html = layout(`
+  <p>Namaste ${escapeHtml(b.customerName)},</p>
+  <p>Your visit request for Shri Sai Vatika Banquet Hall has been cancelled:</p>
+  <ul>
+    <li><strong>Visit date:</strong> ${escapeHtml(b.visitDate)}</li>
+    <li><strong>Time slot:</strong> ${escapeHtml(b.timeSlot)}</li>
+    <li><strong>Event type:</strong> ${escapeHtml(b.eventType)}</li>
+  </ul>
+  <p>If this was not expected, or you would like to pick a new date, please call us or message us on WhatsApp.</p>
+  <p>Warm regards,<br/>Shri Sai Vatika Banquet Hall<br/>Phone: 98350 63448</p>`);
+  return { subject, html, text };
+}
+
+export function customerRescheduledEmail(b: {
+  customerName: string;
+  eventType: string;
+  oldVisitDate: string;
+  oldTimeSlot: string;
+  visitDate: string;
+  timeSlot: string;
+}): { subject: string; html: string; text: string } {
+  const subject = "Your visit has been rescheduled — Shri Sai Vatika";
+  const text = `Namaste ${b.customerName},
+
+Your visit to Shri Sai Vatika Banquet Hall has been rescheduled:
+- Previous: ${b.oldVisitDate}, ${b.oldTimeSlot}
+- New visit date: ${b.visitDate}
+- New time slot: ${b.timeSlot}
+- Event type: ${b.eventType}
+
+Please update your plans for the new date and time. If it does not work for you, call us and we will find another slot.
+
+Warm regards,
+Shri Sai Vatika Banquet Hall
+Phone: 98350 63448`;
+  const html = layout(`
+  <p>Namaste ${escapeHtml(b.customerName)},</p>
+  <p>Your visit to Shri Sai Vatika Banquet Hall has been rescheduled:</p>
+  <ul>
+    <li><strong>Previous:</strong> ${escapeHtml(b.oldVisitDate)}, ${escapeHtml(b.oldTimeSlot)}</li>
+    <li><strong>New visit date:</strong> ${escapeHtml(b.visitDate)}</li>
+    <li><strong>New time slot:</strong> ${escapeHtml(b.timeSlot)}</li>
+    <li><strong>Event type:</strong> ${escapeHtml(b.eventType)}</li>
+  </ul>
+  <p>Please update your plans for the new date and time. If it does not work for you, call us and we will find another slot.</p>
+  <p>Warm regards,<br/>Shri Sai Vatika Banquet Hall<br/>Phone: 98350 63448</p>`);
+  return { subject, html, text };
+}
+
 export function ownerNotificationEmail(b: {
   customerName: string;
   phone: string;
