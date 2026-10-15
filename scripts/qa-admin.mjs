@@ -1,4 +1,4 @@
-// Milestone 9 — private owner dashboard QA.
+// Milestone 9 + 10 — private owner dashboard QA.
 //
 // Exercises, for real, against a production build:
 //   1. Public visitors still browse + submit without an account.
@@ -8,14 +8,20 @@
 //   5. An authorized owner can reach the dashboard and act on bookings.
 //   6. Private booking APIs reject unauthorized requests.
 //   7. Logout removes access to protected pages and APIs.
-//   8. Slot uniqueness + public availability behaviour are intact.
-//   9. No service-role key or private booking data leaks to the browser.
-//  10. Admin layouts stay responsive and labelled.
+//   8. Per-slot capacity + public availability behave (accept up to
+//      capacity, refuse beyond it, release on cancellation).
+//   9. Bulk confirmation: 10-item limit, per-booking results, no
+//      transition bypass, partial failures.
+//  10. No service-role key or private booking data leaks to the browser.
+//  11. Admin layouts stay responsive and labelled.
 //
-// Test data only: the seeded booking is inserted with the service-role key
-// (so no customer email is ever sent) and deleted at the end. Test accounts
-// are provisioned through Supabase Auth's admin API — the same private
-// process documented in docs/admin-dashboard.md. There is no public signup.
+// Test data only: the seeded bookings are inserted with the service-role key
+// (so no customer email is ever sent by the script itself) and deleted at the
+// end. Test accounts are provisioned through Supabase Auth's admin API — the
+// same private process documented in docs/admin-dashboard.md. There is no
+// public signup. Owner actions performed through the private API do send
+// customer emails through the live Resend integration (to the seeded QA
+// address); delivery failures never fail the QA action itself.
 
 import { chromium } from "playwright-core";
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
@@ -230,6 +236,14 @@ try {
       availability.ok === true && Array.isArray(availability.booked),
       JSON.stringify(availability)
     );
+    ok(
+      "Availability reports capacity and remaining spots (no customer data)",
+      typeof availability.capacity === "number" &&
+        availability.capacity >= 1 &&
+        typeof availability.remaining === "object" &&
+        !JSON.stringify(availability).match(/@|customer|phone/i),
+      JSON.stringify(availability)
+    );
 
     await ctx.close();
   }
@@ -257,6 +271,11 @@ try {
         "PATCH /api/admin/bookings/{id}",
         `${BASE}/api/admin/bookings/00000000-0000-0000-0000-000000000000`,
         { method: "PATCH", data: { action: "confirm", expected: { status: "PENDING" } }, headers: { "Content-Type": "application/json" } },
+      ],
+      [
+        "POST /api/admin/bookings/bulk",
+        `${BASE}/api/admin/bookings/bulk`,
+        { method: "POST", data: { action: "confirm", bookings: [] }, headers: { "Content-Type": "application/json" } },
       ],
     ]) {
       const res = await ctx.request.fetch(url, init);
@@ -355,6 +374,11 @@ try {
       }
     );
     ok("Unauthorized session cannot change a booking", unauthPatch.status() === 403, `HTTP ${unauthPatch.status()}`);
+    const unauthBulk = await ctx.request.post(`${BASE}/api/admin/bookings/bulk`, {
+      data: { action: "confirm", bookings: [] },
+      headers: { "Content-Type": "application/json" },
+    });
+    ok("Unauthorized session cannot bulk-confirm bookings", unauthBulk.status() === 403, `HTTP ${unauthBulk.status()}`);
     const unauthDetail = await ctx.request.get(
       `${BASE}/api/admin/bookings/00000000-0000-0000-0000-000000000000`
     );
@@ -382,7 +406,7 @@ try {
   }
 
   // =========================================================================
-  // 5 + 6 + 7 + 8. Owner flow: login, act, reschedule, cancel, logout
+  // 5 + 6 + 7 + 8. Owner flow: login, capacity, reschedule, cancel, reuse
   // =========================================================================
   let seededId = null;
   let seededSlot = "01:00 PM – 03:00 PM";
@@ -390,12 +414,22 @@ try {
   {
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 
-    // Pick a slot the seeded booking can own, then seed it.
+    // Pick the slot with the most room, then seed one booking into it.
     const taken = await (
       await ctx.request.get(`${BASE}/api/visit-bookings/availability?date=${istDatePlus(2)}`)
     ).json();
     const slotList = ["09:00 AM – 12:00 PM", "01:00 PM – 03:00 PM", "03:00 PM – 06:00 PM", "06:00 PM – 08:00 PM"];
-    seededSlot = slotList.find((slot) => !(taken.booked ?? []).includes(slot)) || slotList[0];
+    const slotCapacity = taken.capacity ?? 1;
+    ok(
+      "Configured slot capacity is at least 1",
+      typeof slotCapacity === "number" && slotCapacity >= 1,
+      String(slotCapacity)
+    );
+    seededSlot =
+      slotList
+        .slice()
+        .sort((a, b) => (taken.remaining?.[b] ?? 0) - (taken.remaining?.[a] ?? 0))
+        .find((slot) => (taken.remaining?.[slot] ?? 0) > 0) || slotList[0];
     const seeded = await seedBooking(istDatePlus(2), seededSlot);
     seededId = seeded.id;
     ok("Test booking seeded for owner actions", Boolean(seededId), seededId ?? "");
@@ -440,25 +474,41 @@ try {
     const searchRes = await ctx.request.get(`${BASE}/api/admin/bookings?q=QA%20Milestone`);
     ok("Owner search finds the seeded booking", (await searchRes.json()).items?.length >= 1);
 
-    // ----- Slot uniqueness: a duplicate request for the taken slot is refused -----
-    const duplicate = await ctx.request.post(`${BASE}/api/visit-bookings`, {
+    // ----- Per-slot capacity: a slot accepts bookings up to capacity, then refuses -----
+    let availNow = await (
+      await ctx.request.get(`${BASE}/api/visit-bookings/availability?date=${istDatePlus(2)}`)
+    ).json();
+    // Fill the seeded slot up to capacity with direct inserts (no emails).
+    while ((availNow.remaining?.[seededSlot] ?? 0) > 0) {
+      await seedBooking(istDatePlus(2), seededSlot);
+      availNow = await (
+        await ctx.request.get(`${BASE}/api/visit-bookings/availability?date=${istDatePlus(2)}`)
+      ).json();
+    }
+    ok(
+      "Slot reports no remaining spots once filled to capacity",
+      (availNow.remaining?.[seededSlot] ?? 0) === 0 && (availNow.booked ?? []).includes(seededSlot),
+      JSON.stringify(availNow.remaining ?? {})
+    );
+    const overflow = await ctx.request.post(`${BASE}/api/visit-bookings`, {
       data: {
-        customerName: "Duplicate Probe",
+        customerName: "Capacity Probe",
         phone: "+91 88888 88888",
-        email: "duplicate-probe@example.com",
+        email: "capacity-probe@example.com",
         eventType: "Reception",
         visitDate: istDatePlus(2),
         timeSlot: seededSlot,
       },
       headers: { "Content-Type": "application/json" },
     });
-    ok("Public API still rejects a duplicate slot", duplicate.status() === 409, `HTTP ${duplicate.status()}`);
+    ok("Public API refuses a booking beyond slot capacity", overflow.status() === 409, `HTTP ${overflow.status()}`);
     const afterDuplicate = await (
       await ctx.request.get(`${BASE}/api/visit-bookings/availability?date=${istDatePlus(2)}`)
     ).json();
     ok(
-      "Duplicate probe created no extra booking",
-      (afterDuplicate.booked ?? []).filter((slot) => slot === seededSlot).length === 1
+      "Overflow probe created no extra booking",
+      (afterDuplicate.remaining?.[seededSlot] ?? 0) === 0,
+      JSON.stringify(afterDuplicate.remaining ?? {})
     );
 
     // ----- Detail + owner actions, exercised end to end -----
@@ -501,7 +551,10 @@ try {
     // Reschedule to a free slot — through the real UI form. The panel is
     // reloaded first because the confirm/cancel checks above ran through the
     // API, so the open panel would (correctly) be refused as stale.
-    const freeSlot = slotList.find((slot) => slot !== seededSlot && !(afterDuplicate.booked ?? []).includes(slot)) || "06:00 PM – 08:00 PM";
+    const reschedAvail = await (
+      await ctx.request.get(`${BASE}/api/visit-bookings/availability?date=${istDatePlus(3)}`)
+    ).json();
+    const freeSlot = slotList.find((slot) => (reschedAvail.remaining?.[slot] ?? 0) > 0) || "06:00 PM – 08:00 PM";
     await page.goto(`${BASE}/admin/bookings`, { waitUntil: "networkidle" });
     await page.waitForSelector("table, li.rounded-card", { timeout: 15000 });
     await page.click('button:has-text("View booking")');
@@ -522,15 +575,28 @@ try {
     ok("Owner can reschedule a booking", rescheduled.status === "RESCHEDULED", rescheduled.status);
     ok("Reschedule moved the slot", rescheduled.visitDate === istDatePlus(3) && rescheduled.timeSlot === freeSlot, `${rescheduled.visitDate} ${rescheduled.timeSlot}`);
 
-    // Conflicting reschedule into a slot another booking already holds must
-    // be refused atomically. The main booking has moved away from its
-    // original slot, so a second test booking is seeded to actually occupy
-    // the destination (both rows are removed by the cleanup below).
+    // Conflicting reschedule into a slot already filled to capacity must be
+    // refused atomically. The main booking has moved away from its original
+    // slot, so the destination is filled with seeded bookings (all rows are
+    // removed by the cleanup below).
     const blockerTaken = await (
       await ctx.request.get(`${BASE}/api/visit-bookings/availability?date=${istDatePlus(4)}`)
     ).json();
-    const blockerSlot = slotList.find((slot) => !(blockerTaken.booked ?? []).includes(slot)) || slotList[0];
-    await seedBooking(istDatePlus(4), blockerSlot);
+    const blockerCapacity = blockerTaken.capacity ?? 1;
+    const blockerSlot = slotList.find((slot) => (blockerTaken.remaining?.[slot] ?? 0) > 0) || slotList[0];
+    let blockerId = null;
+    for (let i = 0; i < blockerCapacity; i++) {
+      const blocker = await seedBooking(istDatePlus(4), blockerSlot);
+      if (!blockerId) blockerId = blocker.id;
+    }
+    const blockerFull = await (
+      await ctx.request.get(`${BASE}/api/visit-bookings/availability?date=${istDatePlus(4)}`)
+    ).json();
+    ok(
+      "Destination slot is filled to capacity before the clash probe",
+      (blockerFull.remaining?.[blockerSlot] ?? 0) === 0,
+      JSON.stringify(blockerFull.remaining ?? {})
+    );
 
     const clash = await ctx.request.patch(`${BASE}/api/admin/bookings/${seededId}`, {
       data: {
@@ -541,12 +607,54 @@ try {
       },
       headers: { "Content-Type": "application/json" },
     });
-    ok("Reschedule into a taken slot is refused", clash.status() === 409, `HTTP ${clash.status()}`);
+    ok("Reschedule into a full slot is refused", clash.status() === 409, `HTTP ${clash.status()}`);
     const unchanged = (await (await ctx.request.get(`${BASE}/api/admin/bookings/${seededId}`)).json()).booking;
     ok(
       "Failed reschedule left no inconsistent data",
       unchanged.visitDate === istDatePlus(3) && unchanged.timeSlot === freeSlot,
       `${unchanged.visitDate} ${unchanged.timeSlot}`
+    );
+
+    // Rescheduling to the booking's own current slot is refused as a no-op.
+    const sameSlot = await ctx.request.patch(`${BASE}/api/admin/bookings/${seededId}`, {
+      data: {
+        action: "reschedule",
+        expected: { status: "RESCHEDULED", visitDate: unchanged.visitDate, timeSlot: unchanged.timeSlot },
+        visitDate: unchanged.visitDate,
+        timeSlot: unchanged.timeSlot,
+      },
+      headers: { "Content-Type": "application/json" },
+    });
+    ok("Same-slot reschedule is refused", sameSlot.status() === 400, `HTTP ${sameSlot.status()}`);
+
+    // ----- Cancelling releases the slot: it is bookable again -----
+    const cancelBlocker = await ctx.request.patch(`${BASE}/api/admin/bookings/${blockerId}`, {
+      data: {
+        action: "cancel",
+        expected: { status: "PENDING", visitDate: istDatePlus(4), timeSlot: blockerSlot },
+      },
+      headers: { "Content-Type": "application/json" },
+    });
+    ok("Owner can cancel a seeded booking", cancelBlocker.status() === 200, `HTTP ${cancelBlocker.status()}`);
+    const afterCancel = await (
+      await ctx.request.get(`${BASE}/api/visit-bookings/availability?date=${istDatePlus(4)}`)
+    ).json();
+    ok(
+      "Cancellation released capacity for the slot",
+      (afterCancel.remaining?.[blockerSlot] ?? 0) > 0,
+      JSON.stringify(afterCancel.remaining ?? {})
+    );
+    // A replacement booking fits again (direct insert — same atomic
+    // capacity path the public API uses, minus the emails).
+    const reuse = await seedBooking(istDatePlus(4), blockerSlot);
+    ok("A freed slot can be booked again", Boolean(reuse.id), reuse.id ?? "");
+    const afterReuse = await (
+      await ctx.request.get(`${BASE}/api/visit-bookings/availability?date=${istDatePlus(4)}`)
+    ).json();
+    ok(
+      "Slot is full again after reuse",
+      (afterReuse.remaining?.[blockerSlot] ?? 0) === 0,
+      JSON.stringify(afterReuse.remaining ?? {})
     );
 
     // Rescheduled → confirm → complete
@@ -569,6 +677,72 @@ try {
       headers: { "Content-Type": "application/json" },
     });
     ok("Completed bookings are terminal", zombie.status() === 409, `HTTP ${zombie.status()}`);
+
+    // ----- Bulk confirmation: limit, per-booking results, partial failures -----
+    const bulkTooMany = await ctx.request.post(`${BASE}/api/admin/bookings/bulk`, {
+      data: {
+        action: "confirm",
+        bookings: Array.from({ length: 11 }, () => ({ id: seededId, expectedStatus: "PENDING" })),
+      },
+      headers: { "Content-Type": "application/json" },
+    });
+    ok("Bulk API refuses more than 10 bookings in one request", bulkTooMany.status() === 400, `HTTP ${bulkTooMany.status()}`);
+
+    const bulkAvail5 = await (
+      await ctx.request.get(`${BASE}/api/visit-bookings/availability?date=${istDatePlus(5)}`)
+    ).json();
+    const bulkAvail6 = await (
+      await ctx.request.get(`${BASE}/api/visit-bookings/availability?date=${istDatePlus(6)}`)
+    ).json();
+    const bulkSlotA = slotList.find((slot) => (bulkAvail5.remaining?.[slot] ?? 0) > 0) || slotList[0];
+    const bulkSlotB = slotList.find((slot) => (bulkAvail6.remaining?.[slot] ?? 0) > 0) || slotList[1];
+    const bulkA = await seedBooking(istDatePlus(5), bulkSlotA);
+    const bulkB = await seedBooking(istDatePlus(6), bulkSlotB);
+
+    // Confirm B alone first, so the bulk request below carries a stale view
+    // of it — the compare-and-swap must refuse instead of double-confirming.
+    const singleConfirmB = await ctx.request.patch(`${BASE}/api/admin/bookings/${bulkB.id}`, {
+      data: {
+        action: "confirm",
+        expected: { status: "PENDING", visitDate: bulkB.visit_date, timeSlot: bulkB.time_slot },
+      },
+      headers: { "Content-Type": "application/json" },
+    });
+    ok("Owner can confirm the second bulk fixture", singleConfirmB.status() === 200, `HTTP ${singleConfirmB.status()}`);
+
+    const bulkRes = await ctx.request.post(`${BASE}/api/admin/bookings/bulk`, {
+      data: {
+        action: "confirm",
+        bookings: [
+          { id: bulkA.id, expectedStatus: "PENDING" },    // fresh → succeeds
+          { id: bulkB.id, expectedStatus: "PENDING" },    // moved on → stale
+          { id: seededId, expectedStatus: "COMPLETED" },  // terminal → invalid transition
+        ],
+      },
+      headers: { "Content-Type": "application/json" },
+    });
+    const bulkBody = await bulkRes.json();
+    ok(
+      "Bulk confirm returns per-booking results",
+      bulkRes.status() === 200 && (bulkBody.results ?? []).length === 3,
+      JSON.stringify(bulkBody)
+    );
+    const bulkCodes = (bulkBody.results ?? []).map((r) => (r.ok ? "ok" : r.code));
+    ok(
+      "Bulk confirm separates successes, stale views and illegal transitions",
+      bulkBody.succeeded === 1 && bulkBody.failed === 2 &&
+        bulkCodes[0] === "ok" && bulkCodes[1] === "stale" && bulkCodes[2] === "invalid_transition",
+      JSON.stringify(bulkCodes)
+    );
+    const bulkAAfter = (await (await ctx.request.get(`${BASE}/api/admin/bookings/${bulkA.id}`)).json()).booking;
+    const bulkBAfter = (await (await ctx.request.get(`${BASE}/api/admin/bookings/${bulkB.id}`)).json()).booking;
+    ok("Bulk success wrote CONFIRMED", bulkAAfter.status === "CONFIRMED", bulkAAfter.status);
+    ok("Bulk failure left the stale booking untouched", bulkBAfter.status === "CONFIRMED", bulkBAfter.status);
+
+    // Bulk confirmation is offered in the private UI as well.
+    await page.goto(`${BASE}/admin/bookings`, { waitUntil: "networkidle" });
+    await page.waitForSelector("table, li.rounded-card", { timeout: 15000 });
+    ok("Bookings page exposes bulk selection checkboxes", (await page.locator('input[type="checkbox"]').count()) > 0);
 
     // ----- Logout removes access -----
     await page.goto(`${BASE}/admin/bookings`, { waitUntil: "networkidle" });

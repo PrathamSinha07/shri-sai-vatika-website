@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test src/lib/booking/validate.test.ts src/lib/admin/transitions.test.ts"
+    "test": "tsx --test src/lib/booking/validate.test.ts src/lib/booking/capacity.test.ts src/lib/booking/migration-capacity.test.ts src/lib/admin/transitions.test.ts src/lib/admin/actions.test.ts src/lib/admin/bulk.test.ts src/lib/admin/auth.test.ts src/lib/admin/bookings.test.ts src/lib/supabase/server.test.ts src/lib/email/notify.test.ts"
   },
   "dependencies": {
     "motion": "^14.0.0",

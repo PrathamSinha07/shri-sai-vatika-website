@@ -1,6 +1,8 @@
 // Server-only Supabase access via PostgREST (no anon access; service role
 // key must never reach the browser).
 import { requiredEnv } from "@/lib/env";
+import { slotCapacity } from "@/lib/booking/capacity";
+import { BOOKING_TIME_SLOTS } from "@/content/booking";
 import type { NormalizedBooking } from "@/lib/booking/validate";
 
 export class SlotUnavailableError extends Error {
@@ -17,6 +19,9 @@ export class BookingStoreError extends Error {
   }
 }
 
+/** Stable marker raised by the slot-capacity trigger (see migration 0003). */
+export const CAPACITY_VIOLATION_MARKER = "slot capacity exceeded";
+
 function headers(): HeadersInit {
   const key = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
   return {
@@ -30,27 +35,56 @@ function baseUrl(): string {
   return requiredEnv("SUPABASE_URL").replace(/\/$/, "");
 }
 
-export async function getBookedSlots(visitDate: string): Promise<string[]> {
+export interface SlotAvailability {
+  capacity: number;
+  /** Capacity-consuming bookings per fixed slot (CANCELLED excluded). */
+  counts: Record<string, number>;
+  /** Spots still open per fixed slot. */
+  remaining: Record<string, number>;
+  /** Slots with no room left (kept for the existing form/UX contract). */
+  booked: string[];
+}
+
+/**
+ * Availability for one date. Only capacity-consuming bookings count:
+ * CANCELLED bookings release their slot (the database trigger guarantees
+ * the same rule atomically at write time).
+ */
+export async function getSlotAvailability(visitDate: string): Promise<SlotAvailability> {
   const url = `${baseUrl()}/rest/v1/visit_bookings?visit_date=eq.${encodeURIComponent(
     visitDate
   )}&status=neq.CANCELLED&select=time_slot`;
   const res = await fetch(url, { headers: headers(), cache: "no-store" });
   if (!res.ok) throw new BookingStoreError();
   const rows = (await res.json()) as Array<{ time_slot: string }>;
-  return rows.map((r) => r.time_slot);
+
+  const counts: Record<string, number> = {};
+  for (const slot of BOOKING_TIME_SLOTS) counts[slot] = 0;
+  for (const row of rows) counts[row.time_slot] = (counts[row.time_slot] ?? 0) + 1;
+
+  const capacity = slotCapacity();
+  const remaining: Record<string, number> = {};
+  const booked: string[] = [];
+  for (const slot of BOOKING_TIME_SLOTS) {
+    const open = Math.max(0, capacity - (counts[slot] ?? 0));
+    remaining[slot] = open;
+    if (open === 0) booked.push(slot);
+  }
+  return { capacity, counts, remaining, booked };
 }
 
-export async function isSlotAvailable(
+/** How many capacity-consuming bookings a date + slot currently holds. */
+export async function countActiveBookings(
   visitDate: string,
   timeSlot: string
-): Promise<boolean> {
+): Promise<number> {
   const url = `${baseUrl()}/rest/v1/visit_bookings?visit_date=eq.${encodeURIComponent(
     visitDate
-  )}&time_slot=eq.${encodeURIComponent(timeSlot)}&status=neq.CANCELLED&select=id&limit=1`;
+  )}&time_slot=eq.${encodeURIComponent(timeSlot)}&status=neq.CANCELLED&select=id`;
   const res = await fetch(url, { headers: headers(), cache: "no-store" });
   if (!res.ok) throw new BookingStoreError();
   const rows = (await res.json()) as Array<{ id: string }>;
-  return rows.length === 0;
+  return rows.length;
 }
 
 export async function insertVisitBooking(
@@ -77,9 +111,13 @@ export async function insertVisitBooking(
     throw new SlotUnavailableError();
   }
   if (!res.ok) {
-    // Unique violation may surface as 400 with code 23505 in the body.
+    // Unique violations (23505) and the slot-capacity trigger both surface
+    // as errors here; the trigger's statement is atomic, so nothing was
+    // partially inserted and the caller can safely report "slot taken".
     const body = await res.text().catch(() => "");
-    if (body.includes("23505")) throw new SlotUnavailableError();
+    if (body.includes("23505") || body.includes(CAPACITY_VIOLATION_MARKER)) {
+      throw new SlotUnavailableError();
+    }
     console.error("Booking insert failed", res.status, body);
     throw new BookingStoreError();
   }
