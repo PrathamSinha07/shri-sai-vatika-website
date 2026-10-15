@@ -36,10 +36,11 @@ src/
   content/              # ALL business info: site.ts, facilities.ts, packages.ts
   lib/
     env.ts              # validated env access
-    admin/              # auth, session guards, transitions, booking data access
+    admin/              # auth, session guards, transitions, action planning,
+                        # bulk validation, booking data access
     supabase/           # server client (service role, server-only)
-    email/              # resend client + templates
-    booking/            # visit-booking validation rules
+    email/              # resend client + templates + owner-action notifications
+    booking/            # visit-booking validation rules + slot capacity
     maps.ts             # google maps url builders
     whatsapp.ts         # click-to-chat url builder
     utils.ts
@@ -110,8 +111,11 @@ homepage section.
   `POST /api/visit-bookings` + availability endpoint; see
   `docs/booking-system.md`. The form collects name, phone, email, event
   type, visit date and time slot (no free-text message field); the API
-  still accepts an optional `message` for compatibility.
-  Owner dashboard intentionally not built.
+  still accepts an optional `message` for compatibility. Multiple
+  customers may hold the same slot up to a configurable capacity
+  (`BOOKING_SLOT_CAPACITY`, default 2), enforced atomically in the
+  database; the owner dashboard (`docs/admin-dashboard.md`) manages
+  bookings, including bulk confirmation and owner-action emails.
 - Director's Message: built (`Director.tsx`), content in
   `src/content/director.ts`.
 - Reviews/testimonials: intentionally deferred until genuine client-

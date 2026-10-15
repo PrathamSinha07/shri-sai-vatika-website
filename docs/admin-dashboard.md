@@ -1,8 +1,8 @@
 # Owner Dashboard (Private Admin Area)
 
-Status: **implemented** for overview, booking management and safe owner
-actions (Milestone 9). Email notifications for owner actions are **not**
-implemented — they land in Milestone 10.
+Status: **implemented** for overview, booking management, safe owner
+actions, bulk confirmation and owner-action customer emails
+(Milestones 9 + 10).
 
 ## Privacy rules
 
@@ -34,6 +34,7 @@ The dashboard is for the venue owner and explicitly authorized staff only.
 | `GET /api/admin/bookings` | private | Filtered / searched / sorted / paginated list |
 | `GET /api/admin/bookings/{id}` | private | Booking detail |
 | `PATCH /api/admin/bookings/{id}` | private | confirm · cancel · complete · reschedule |
+| `POST /api/admin/bookings/bulk` | private | Bulk confirm (max 10 bookings, per-booking results) |
 
 The public customer-facing chrome (navbar, footer, WhatsApp button, skip link)
 lives in the `src/app/(public)` route group, so `/admin/*` is never wrapped in
@@ -122,42 +123,57 @@ provisioned by `scripts/qa-admin.mjs`; passwords are stored in the gitignored
 
 ## Database
 
-**No migration was required for Milestone 9.**
+**Milestone 10 applies one additive migration** —
+`supabase/migrations/0003_slot_capacity.sql` (see
+`docs/database-schema.md` for the full design). It replaces the old
+one-booking-per-slot unique index with a configurable per-slot capacity
+enforced atomically inside PostgreSQL (transaction-scoped advisory lock
+per date + slot). No rows are deleted or rewritten: every existing
+booking is preserved, RLS stays enabled with no anon/authenticated
+policies, and no new public path was created.
 
-- Owner authorization is an env allowlist, not a database role, so no
-  `owner_accounts` table was added.
-- RLS stays enabled on `visit_bookings`/`enquiries` with **no** policies for
-  `anon`/`authenticated`, exactly as before. The dashboard reads and writes
-  through the service-role key on the server after authorization, so no public
-  read path was created and RLS was never disabled.
-- The existing `UNIQUE (visit_date, time_slot)` constraint is untouched and
-  remains the final arbiter for double-booking.
+- Owner authorization remains an env allowlist, not a database role, so
+  no `owner_accounts` table exists.
+- The dashboard reads and writes through the service-role key on the
+  server after authorization, exactly as before.
+- Owner actions that consume no new capacity (confirm, cancel,
+  complete) can never be blocked by the capacity check; only
+  rescheduling checks its destination, and the trigger is the final
+  arbiter for concurrent requests.
 
-### Known pre-existing quirk (not introduced here)
-
-The unique index covers **every** row, including `CANCELLED` ones, while the
-public availability API hides cancelled slots. A slot that was cancelled is
-therefore still blocked at the database, so a customer can see it as free and
-then be told it was "just taken". Fixing it needs an additive migration that
-replaces the index with a partial one
-(`… where status <> 'CANCELLED'`), which must be applied by hand in the
-Supabase SQL editor — left for a later milestone rather than guessed at here.
+The migration is **not applied automatically** — apply it by hand
+(Supabase SQL editor or `supabase db push` after linking) around the
+deploy of this milestone; either order is safe. It creates every
+replacement object (partial index, functions, trigger) **before**
+dropping the old unique index, so no intermediate application state is
+unprotected. The advisory-lock no-oversell guarantee assumes the
+database stays at the `read committed` isolation level (the
+Supabase/PostgREST default); the migration does not enforce it — verify
+with `show default_transaction_isolation;` before applying. All
+pre-apply checks are listed in `docs/database-schema.md`.
 
 ## Owner actions and status transitions
 
 The client never chooses a resulting status. `PATCH /api/admin/bookings/{id}`
 derives it server-side from the action and the booking's current status
-(`src/lib/admin/transitions.ts`, unit-tested in `transitions.test.ts`):
+(`src/lib/admin/actions.ts` over `src/lib/admin/transitions.ts`,
+unit-tested in `actions.test.ts` / `transitions.test.ts`):
 
-| Action | Allowed from | Writes |
-| --- | --- | --- |
-| `confirm` | `PENDING`, `RESCHEDULED` | `CONFIRMED` |
-| `cancel` | `PENDING`, `CONFIRMED`, `RESCHEDULED` | `CANCELLED` |
-| `complete` | `CONFIRMED` | `COMPLETED` |
-| `reschedule` | `PENDING`, `CONFIRMED`, `RESCHEDULED` | `RESCHEDULED` + new date/slot |
+| Action | Allowed from | Writes | Slot capacity check |
+| --- | --- | --- | --- |
+| `confirm` | `PENDING`, `RESCHEDULED` | `CONFIRMED` | never |
+| `cancel` | `PENDING`, `CONFIRMED`, `RESCHEDULED` | `CANCELLED` | never (frees the slot) |
+| `complete` | `CONFIRMED` | `COMPLETED` | never |
+| `reschedule` | `PENDING`, `CONFIRMED`, `RESCHEDULED` | `RESCHEDULED` + new date/slot | destination only |
 
 `COMPLETED` and `CANCELLED` are terminal: no action can resurrect a finished
 booking.
+
+**Bulk confirmation** (`POST /api/admin/bookings/bulk`) confirms up to 10
+bookings per request with per-booking success/failure results. It uses the
+same authorization gate, transition rules and compare-and-swap as the
+single-booking PATCH — one failing booking never blocks or bypasses the
+others. The bulk cap is independent of the per-slot customer capacity.
 
 ### Concurrency safety
 
@@ -165,20 +181,31 @@ Every write is a **compare-and-swap**: the client sends the state it was
 looking at (`expected.status`, plus `expected.visitDate`/`expected.timeSlot`
 for rescheduling) and the update pins that exact state in its `WHERE` clause.
 Zero matched rows means the booking moved on, and the API answers `409` instead
-of silently overwriting newer state. The destination of a reschedule is also
-pre-checked for conflicts, and the unique index aborts the whole statement if a
-concurrent booking wins the race (also `409`) — no partial update is possible.
+of silently overwriting newer state. The destination of a reschedule is
+pre-checked against **other** capacity-consuming bookings (excluding the
+booking being moved), and the slot-capacity trigger aborts the whole statement
+if a concurrent booking wins the race (also `409`) — no partial update is
+possible.
 
-### Rescheduling: implemented (not deferred)
+### Rescheduling and capacity
 
-The existing schema supports rescheduling safely, so it is implemented as a
-single atomic `UPDATE` of `visit_date` + `time_slot` (+ `status`) on the
-existing row. No second booking table, no duplicate booking API, no
-`rescheduled_from` history row, and no schema change were needed. Server-side
-validation reuses the public rules: tomorrow-or-later in `Asia/Kolkata`, one of
-the four fixed slots, and a free destination slot.
+Rescheduling is a single atomic `UPDATE` of `visit_date` + `time_slot`
+(+ `status`) on the existing row — no second booking table, no duplicate
+booking API, no `rescheduled_from` history row. Server-side validation
+reuses the public rules: tomorrow-or-later in `Asia/Kolkata`, one of the
+four fixed slots, a *different* date/slot, and room left in the
+destination slot. The database trigger serializes concurrent writers per
+slot with a transaction advisory lock, so simultaneous reschedules or
+bookings can never oversell a slot (see `docs/database-schema.md`).
 
-Email notifications for owner actions are **not** delivered — Milestone 10.
+### Owner-action emails (implemented — Milestone 10)
+
+After a successful confirm, cancel or reschedule, the customer receives
+an email through the existing Resend integration (reschedule emails
+carry the new date/time and the previous one). Emails are sent strictly
+after the database update; a delivery failure never rolls anything back
+and is reported separately (`emailIssue` in the single-action response,
+per-booking `emailIssue` in bulk results, plus a dashboard notice).
 
 ## UI
 
@@ -206,9 +233,11 @@ It verifies: public browsing and submission without an account, absence of
 dashboard links in public HTML, unauthenticated redirects/`401`s, a real
 non-owner account being denied on both pages and APIs, a real owner logging in
 through the UI and confirming/rescheduling/completing/cancelling a booking,
-stale-update and illegal-transition refusals, slot uniqueness and availability
-still behaving, logout removing access, and no service-role key or private
-booking data in public HTML or `.next/static` bundles.
+stale-update and illegal-transition refusals, per-slot capacity behaviour
+(slots accept bookings up to capacity, refuse beyond it, and release on
+cancellation), bulk confirmation (limit, authorization, partial failures),
+availability still behaving, logout removing access, and no service-role key
+or private booking data in public HTML or `.next/static` bundles.
 
 The seeded QA booking is inserted directly with the service-role key (so no
 email is ever sent) and deleted when the run ends.
@@ -231,7 +260,17 @@ It proves that a perfectly valid Supabase owner login is still refused with
   the dashboard denies everyone (by design).
 - The in-memory login limiter is per server instance; production should add
   edge rate limiting (e.g. Vercel WAF or Upstash) and log monitoring.
-- Owner-action emails (customer confirmation of confirm/cancel/reschedule and
-  a summary to the owner inbox) are intentionally not implemented yet —
-  Milestone 10.
-- The cancelled-slot index quirk above needs a hand-applied migration.
+- `BOOKING_SLOT_CAPACITY` and the database setting `app.slot_capacity` must
+  match; the capacity value itself (default 2) is a configuration default,
+  not a client-confirmed venue fact — confirm the real per-slot capacity
+  with the client and set both accordingly. Both sides accept only a bare
+  integer and fall back to `2` for malformed values, so a typo degrades
+  capacity instead of failing writes.
+- The capacity migration's no-oversell guarantee assumes `read committed`
+  isolation (the Supabase/PostgREST default). Nothing in the schema
+  enforces that level — if the database default is ever changed, the
+  guarantee no longer holds. Pre-apply check documented in
+  `docs/database-schema.md`.
+- The capacity migration (`0003_slot_capacity.sql`) must be applied by hand
+  (Supabase SQL editor or `supabase db push`); no deploy step in this
+  repository runs it.
