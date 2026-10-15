@@ -1,21 +1,17 @@
 import { NextResponse } from "next/server";
 import { authorizeApi, applySessionCookies } from "@/lib/admin/session";
-import {
-  canApplyAction,
-  isBookingStatus,
-  isOwnerAction,
-  nextStatusFor,
-  type OwnerAction,
-} from "@/lib/admin/transitions";
+import { planOwnerAction } from "@/lib/admin/actions";
 import {
   BookingConflictError,
   BookingNotFoundError,
   BookingStaleError,
+  AdminBookingStoreError,
   applyBookingAction,
+  countOtherActiveBookings,
   getBooking,
-  isSlotFree,
 } from "@/lib/admin/bookings";
-import { isAllowedSlot, isBookableDate } from "@/lib/booking/validate";
+import { isSlotFull, slotCapacity } from "@/lib/booking/capacity";
+import { sendOwnerActionEmail } from "@/lib/email/notify";
 import { NO_STORE } from "@/lib/admin/paths";
 
 type RouteParams = { params: Promise<{ id: string }> };
@@ -45,8 +41,12 @@ export async function GET(request: Request, { params }: RouteParams) {
 
 // Owner actions: confirm / cancel / complete / reschedule.
 // The client never chooses the resulting status — it is derived server-side
-// from the action and the booking's current status, and every write is a
-// compare-and-swap against the state the owner was looking at.
+// from the action and the booking's current status (src/lib/admin/actions.ts),
+// and every write is a compare-and-swap against the state the owner was
+// looking at. Confirm/cancel/complete are pure status changes and never run
+// a slot-availability (capacity) check; only rescheduling checks the
+// destination slot, counting OTHER capacity-consuming bookings and excluding
+// this one. The database trigger (migration 0003) is the atomic arbiter.
 export async function PATCH(request: Request, { params }: RouteParams) {
   const auth = await authorizeApi();
   if (!auth.ok) return auth.response;
@@ -60,14 +60,6 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     return error("Please submit the form again.", 400);
   }
   const input = (body ?? {}) as Record<string, unknown>;
-  const expected = (input.expected ?? null) as Record<string, unknown> | null;
-
-  if (!isOwnerAction(input.action)) return error("Unknown booking action.", 400);
-  if (!expected || !isBookingStatus(expected.status)) {
-    return error("This booking's current status is required.", 400);
-  }
-
-  const action: OwnerAction = input.action;
 
   let booking;
   try {
@@ -78,60 +70,58 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   }
   if (!booking) return error("This booking could not be found.", 404);
 
-  // The owner's view is stale — refuse rather than overwrite newer state.
-  if (booking.status !== expected.status) {
-    return error("This booking has changed since you opened it. Please refresh.", 409);
-  }
-  if (!canApplyAction(booking.status, action)) {
-    return error(`A ${booking.status.toLowerCase()} booking cannot be ${action}ed.`, 409);
-  }
+  const plan = planOwnerAction(booking, input);
+  if (!plan.ok) return error(plan.error, plan.status);
 
-  const nextStatus = nextStatusFor(booking.status, action);
-  let visitDate: string | undefined;
-  let timeSlot: string | undefined;
-
-  if (action === "reschedule") {
-    visitDate = typeof input.visitDate === "string" ? input.visitDate : "";
-    timeSlot = typeof input.timeSlot === "string" ? input.timeSlot : "";
-
-    if (expected.visitDate !== booking.visitDate || expected.timeSlot !== booking.timeSlot) {
-      return error("This booking has changed since you opened it. Please refresh.", 409);
-    }
-    if (!isAllowedSlot(timeSlot)) return error("Please choose one of the fixed visit slots.", 400);
-    if (!isBookableDate(visitDate)) {
-      return error("Visits can only be rescheduled from tomorrow onwards.", 400);
-    }
-    if (visitDate === booking.visitDate && timeSlot === booking.timeSlot) {
-      return error("Please choose a different date or time slot.", 400);
-    }
-
-    let free = false;
+  if (plan.plan.requiresSlotCapacityCheck) {
+    const visitDate = plan.plan.visitDate!;
+    const timeSlot = plan.plan.timeSlot!;
+    let taken = 0;
     try {
-      free = await isSlotFree(visitDate, timeSlot, booking.id);
+      taken = await countOtherActiveBookings(visitDate, timeSlot, booking.id);
     } catch (err) {
       console.error("Admin reschedule availability check failed", err instanceof Error ? err.message : err);
       return error("We couldn't reschedule this booking right now.", 500);
     }
-    if (!free) return error("That date and time slot is already taken.", 409);
+    if (isSlotFull(taken, slotCapacity())) {
+      return error("That date and time slot has no visit spots left.", 409);
+    }
   }
-
-  if (!nextStatus) return error("This booking cannot be updated anymore.", 409);
 
   try {
     const updated = await applyBookingAction({
       id: booking.id,
-      action,
+      action: plan.plan.action,
       expected: {
         status: booking.status,
         visitDate: booking.visitDate,
         timeSlot: booking.timeSlot,
       },
-      nextStatus,
-      visitDate,
-      timeSlot,
+      nextStatus: plan.plan.nextStatus,
+      visitDate: plan.plan.visitDate,
+      timeSlot: plan.plan.timeSlot,
     });
 
-    const response = NextResponse.json({ ok: true, booking: updated }, { headers: NO_STORE });
+    // Customer notification. Sent only after the update succeeded; an email
+    // failure is reported separately and never rolls anything back.
+    let emailIssue = false;
+    try {
+      emailIssue = (
+        await sendOwnerActionEmail({
+          action: plan.plan.action,
+          booking: updated,
+          previous: { visitDate: booking.visitDate, timeSlot: booking.timeSlot },
+        })
+      ).emailIssue;
+    } catch (err) {
+      console.error("Owner-action email step failed", err instanceof Error ? err.message : err);
+      emailIssue = true;
+    }
+
+    const response = NextResponse.json(
+      { ok: true, booking: updated, emailIssue },
+      { headers: NO_STORE }
+    );
     if (auth.refreshed) applySessionCookies(response, auth.refreshed, request);
     return response;
   } catch (err) {
@@ -139,11 +129,14 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       return error(
         err instanceof BookingStaleError
           ? "This booking has changed since you opened it. Please refresh."
-          : "That date and time slot is already taken.",
+          : "That date and time slot has no visit spots left.",
         409
       );
     }
     if (err instanceof BookingNotFoundError) return error("This booking could not be found.", 404);
+    if (err instanceof AdminBookingStoreError) {
+      return error("We couldn't update this booking right now.", 500);
+    }
     console.error("Admin booking action error", err instanceof Error ? err.message : err);
     return error("We couldn't update this booking right now.", 500);
   }

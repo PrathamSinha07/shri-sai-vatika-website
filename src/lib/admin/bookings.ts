@@ -193,18 +193,23 @@ export async function getBooking(id: string): Promise<AdminBooking | null> {
 }
 
 /**
- * True when no booking at all holds that date + slot. The unique index covers
- * every row (cancelled included), so the check must too — otherwise a
- * reschedule would pass this check and then fail at the database.
+ * Counts the OTHER bookings that consume capacity at a date + slot — i.e.
+ * everything except CANCELLED rows and except the booking being rescheduled.
+ * Only used as a friendly pre-check for rescheduling; the slot-capacity
+ * trigger in the database (migration 0003) is the atomic final arbiter.
  */
-export async function isSlotFree(visitDate: string, timeSlot: string, exceptId?: string): Promise<boolean> {
+export async function countOtherActiveBookings(
+  visitDate: string,
+  timeSlot: string,
+  exceptId: string
+): Promise<number> {
   const filters: Array<[string, string]> = [
     ["visit_date", `eq.${visitDate}`],
     ["time_slot", `eq.${timeSlot}`],
+    ["status", "neq.CANCELLED"],
+    ["id", `neq.${exceptId}`],
     ["select", "id"],
-    ["limit", "1"],
   ];
-  if (exceptId) filters.push(["id", `neq.${exceptId}`]);
 
   const res = await fetch(`${baseUrl()}/rest/v1/visit_bookings?${query(filters)}`, {
     headers: headers(),
@@ -212,7 +217,7 @@ export async function isSlotFree(visitDate: string, timeSlot: string, exceptId?:
   });
   if (!res.ok) throw new AdminBookingStoreError();
   const rows = (await res.json()) as Array<{ id: string }>;
-  return rows.length === 0;
+  return rows.length;
 }
 
 export interface ExpectedState {
@@ -234,8 +239,10 @@ export interface ApplyActionInput {
  * Compare-and-swap update. The WHERE clause pins the exact state the owner
  * saw, so a concurrent action (or a second tab) can never be silently
  * overwritten: zero matched rows means the booking moved on.
- * The unique (visit_date, time_slot) index is the final arbiter for
- * rescheduling — a taken destination slot aborts the whole statement.
+ * The slot-capacity trigger (migration 0003) is the final arbiter for
+ * rescheduling — a full destination slot aborts the whole statement. Owner
+ * actions that consume no new capacity (confirm, cancel, complete) skip the
+ * capacity check entirely and can never be blocked by it.
  */
 export async function applyBookingAction(input: ApplyActionInput): Promise<AdminBooking> {
   const filters: Array<[string, string]> = [
@@ -261,6 +268,9 @@ export async function applyBookingAction(input: ApplyActionInput): Promise<Admin
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
+    // Slot-capacity trigger: the destination slot was full when this
+    // statement ran. The statement is atomic, so nothing was applied.
+    if (text.includes("slot capacity exceeded")) throw new BookingConflictError();
     // Unique violation: the destination slot was taken between our check and
     // this write. The statement is atomic, so nothing was partially applied.
     if (text.includes("23505") || res.status === 409) throw new BookingConflictError();
