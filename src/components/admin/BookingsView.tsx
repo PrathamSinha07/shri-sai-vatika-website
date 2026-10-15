@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import StatusBadge from "./StatusBadge";
 import { formatDate, formatDateTime } from "./format";
 import { availableActions, type OwnerAction } from "@/lib/admin/transitions";
+import { MAX_BULK_ITEMS } from "@/lib/admin/bulk";
 import type { AdminBooking } from "@/lib/admin/bookings";
 import { BOOKING_TIME_SLOTS } from "@/content/booking";
 import { earliestBookableDateString } from "@/lib/booking/validate";
@@ -42,6 +43,15 @@ interface ListState {
   pageCount: number;
 }
 
+interface BulkResultRow {
+  id: string;
+  ok: boolean;
+  name: string;
+  status?: string;
+  error?: string;
+  emailIssue?: boolean;
+}
+
 export default function BookingsView() {
   const router = useRouter();
 
@@ -69,8 +79,14 @@ export default function BookingsView() {
 
   const [actionBusy, setActionBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [actionEmailIssue, setActionEmailIssue] = useState(false);
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [rescheduling, setRescheduling] = useState(false);
+
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkError, setBulkError] = useState<string | null>(null);
+  const [bulkResults, setBulkResults] = useState<BulkResultRow[] | null>(null);
   const [newDate, setNewDate] = useState("");
   const [newSlot, setNewSlot] = useState<string>(BOOKING_TIME_SLOTS[0]);
 
@@ -194,6 +210,7 @@ export default function BookingsView() {
   function openDetail(booking: AdminBooking, trigger: HTMLElement | null) {
     restoreFocusRef.current = trigger;
     setActionError(null);
+    setActionEmailIssue(false);
     setConfirmingCancel(false);
     setRescheduling(false);
     setSelected(null);
@@ -206,6 +223,7 @@ export default function BookingsView() {
     if (!selected) return;
     setActionBusy(true);
     setActionError(null);
+    setActionEmailIssue(false);
     try {
       const res = await apiFetch(`/api/admin/bookings/${selected.id}`, {
         method: "PATCH",
@@ -221,13 +239,17 @@ export default function BookingsView() {
         }),
       });
       const body = (await res.json().catch(() => null)) as
-        | { ok?: boolean; error?: string; booking?: AdminBooking }
+        | { ok?: boolean; error?: string; booking?: AdminBooking; emailIssue?: boolean }
         | null;
 
       if (res.ok && body?.ok && body.booking) {
         setSelected(body.booking);
+        setActionEmailIssue(Boolean(body.emailIssue));
         setListVersion((version) => version + 1);
-        setLive(`${ACTION_LABELS[action]} applied. Status is now ${body.booking.status.toLowerCase()}.`);
+        setLive(
+          `${ACTION_LABELS[action]} applied. Status is now ${body.booking.status.toLowerCase()}.` +
+            (body.emailIssue ? " The customer email could not be sent." : "")
+        );
         setConfirmingCancel(false);
         setRescheduling(false);
         return;
@@ -239,6 +261,79 @@ export default function BookingsView() {
       setLive("The update failed.");
     } finally {
       setActionBusy(false);
+    }
+  }
+
+  function toggleSelected(id: string) {
+    setSelectedIds((current) => {
+      if (current.includes(id)) return current.filter((entry) => entry !== id);
+      if (current.length >= MAX_BULK_ITEMS) return current;
+      return [...current, id];
+    });
+  }
+
+  function toggleSelectPage() {
+    const pageIds = items.map((booking) => booking.id);
+    const allSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.includes(id));
+    if (allSelected) {
+      setSelectedIds((current) => current.filter((id) => !pageIds.includes(id)));
+    } else {
+      setSelectedIds(pageIds.slice(0, MAX_BULK_ITEMS));
+    }
+  }
+
+  // Bulk confirmation. Every booking goes through the same server-side
+  // transition rules and compare-and-swap as a single action; results are
+  // reported per booking, and an email delivery failure never fails an
+  // update. The bulk cap (MAX_BULK_ITEMS) is independent of slot capacity.
+  async function runBulkConfirm() {
+    const targets = items.filter((booking) => selectedIds.includes(booking.id));
+    if (targets.length === 0) return;
+    setBulkBusy(true);
+    setBulkError(null);
+    setBulkResults(null);
+    try {
+      const res = await apiFetch("/api/admin/bookings/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "confirm",
+          bookings: targets.map((booking) => ({
+            id: booking.id,
+            expectedStatus: booking.status,
+          })),
+        }),
+      });
+      if (res.status === 401) return; // apiFetch already redirected to sign-in
+      const body = (await res.json().catch(() => null)) as
+        | {
+            ok?: boolean;
+            error?: string;
+            results?: Array<{ id: string; ok: boolean; status?: string; error?: string; emailIssue?: boolean }>;
+          }
+        | null;
+      if (!res.ok || !body?.ok) {
+        setBulkError(body?.error ?? "We couldn't confirm the selected bookings.");
+        return;
+      }
+      const names = new Map(targets.map((booking) => [booking.id, booking.customerName]));
+      const rows = (body.results ?? []).map((result) => ({
+        ...result,
+        name: names.get(result.id) ?? result.id,
+      }));
+      setBulkResults(rows);
+      setLive(
+        `${rows.filter((r) => r.ok).length} confirmed, ${rows.filter((r) => !r.ok).length} failed.`
+      );
+      setSelectedIds([]);
+      // The open detail panel, if it covered one of these bookings, is now
+      // stale — close it so the owner re-reads the fresh state.
+      if (selectedId && selectedIds.includes(selectedId)) closeDetail();
+      setListVersion((version) => version + 1);
+    } catch {
+      setBulkError("We couldn't confirm the selected bookings.");
+    } finally {
+      setBulkBusy(false);
     }
   }
 
@@ -343,6 +438,62 @@ export default function BookingsView() {
         {live}
       </p>
 
+      {items.length > 0 ? (
+        <section
+          aria-label="Bulk confirmation"
+          className="mt-6 rounded-card border border-border bg-surface p-4"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-small text-muted-foreground">
+              {selectedIds.length === 0
+                ? `Select bookings to confirm in bulk (up to ${MAX_BULK_ITEMS} at a time).`
+                : `${selectedIds.length} booking${selectedIds.length === 1 ? "" : "s"} selected for confirmation.`}
+            </p>
+            <button
+              type="button"
+              onClick={runBulkConfirm}
+              disabled={bulkBusy || selectedIds.length === 0}
+              className="btn-text btn-primary"
+            >
+              {bulkBusy ? "Confirming…" : `Confirm selected${selectedIds.length > 0 ? ` (${selectedIds.length})` : ""}`}
+            </button>
+          </div>
+          {selectedIds.length >= MAX_BULK_ITEMS ? (
+            <p className="text-small mt-2 text-muted-foreground">
+              The first {MAX_BULK_ITEMS} are selected. Bulk confirmation handles at most{" "}
+              {MAX_BULK_ITEMS} bookings per batch.
+            </p>
+          ) : null}
+          {bulkError ? (
+            <p className="text-small mt-3 rounded-control border border-[#e3bbbb] bg-[#f8e7e7] px-3 py-2 text-[#8a2222]">
+              {bulkError}
+            </p>
+          ) : null}
+          {bulkResults ? (
+            <div aria-live="polite" className="mt-3">
+              <p className="text-small font-semibold text-foreground">
+                {bulkResults.filter((r) => r.ok).length} of {bulkResults.length} confirmed.
+              </p>
+              <ul className="mt-2 space-y-1">
+                {bulkResults.map((result) => (
+                  <li key={result.id} className="text-small text-muted-foreground">
+                    <span className="font-semibold text-foreground">{result.name}</span>{" "}
+                    {result.ok ? (
+                      <>
+                        — confirmed.
+                        {result.emailIssue ? " The confirmation email could not be sent." : ""}
+                      </>
+                    ) : (
+                      <span className="text-[#8a2222]">— {result.error ?? "could not be confirmed."}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
       {error ? (
         <div className="mt-6 rounded-card border border-[#e3bbbb] bg-[#f8e7e7] p-4">
           <p className="text-small font-semibold text-[#8a2222]">{error}</p>
@@ -377,6 +528,18 @@ export default function BookingsView() {
               <caption className="sr-only">Visit booking requests</caption>
               <thead>
                 <tr className="border-b border-border text-muted-foreground">
+                  <th scope="col" className="px-4 py-3 font-semibold">
+                    <input
+                      type="checkbox"
+                      checked={
+                        items.length > 0 &&
+                        items.every((booking) => selectedIds.includes(booking.id))
+                      }
+                      onChange={toggleSelectPage}
+                      aria-label="Select all bookings on this page for bulk confirmation"
+                      className="h-4 w-4 accent-[#6b1220]"
+                    />
+                  </th>
                   {SORT_COLUMNS.slice(0, 2).map((column) => (
                     <th
                       key={column.field}
@@ -437,6 +600,15 @@ export default function BookingsView() {
                 {items.map((booking) => (
                   <tr key={booking.id} className="border-b border-border last:border-b-0">
                     <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(booking.id)}
+                        onChange={() => toggleSelected(booking.id)}
+                        aria-label={`Select booking from ${booking.customerName} for bulk confirmation`}
+                        className="h-4 w-4 accent-[#6b1220]"
+                      />
+                    </td>
+                    <td className="px-4 py-3">
                       <span className="font-semibold text-foreground">{booking.customerName}</span>
                       <span className="block text-muted-foreground">{booking.eventType}</span>
                     </td>
@@ -471,9 +643,18 @@ export default function BookingsView() {
             {items.map((booking) => (
               <li key={booking.id} className="rounded-card border border-border bg-surface p-4">
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-foreground">{booking.customerName}</p>
-                    <p className="text-small text-muted-foreground">{booking.eventType}</p>
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(booking.id)}
+                      onChange={() => toggleSelected(booking.id)}
+                      aria-label={`Select booking from ${booking.customerName} for bulk confirmation`}
+                      className="mt-1 h-4 w-4 accent-[#6b1220]"
+                    />
+                    <div>
+                      <p className="font-semibold text-foreground">{booking.customerName}</p>
+                      <p className="text-small text-muted-foreground">{booking.eventType}</p>
+                    </div>
                   </div>
                   <StatusBadge status={booking.status} />
                 </div>
@@ -612,6 +793,11 @@ export default function BookingsView() {
                   {actionError ? (
                     <p className="text-small mt-5 rounded-control border border-[#e3bbbb] bg-[#f8e7e7] px-3 py-2 text-[#8a2222]">
                       {actionError}
+                    </p>
+                  ) : null}
+                  {!actionError && actionEmailIssue ? (
+                    <p className="text-small mt-5 rounded-control border border-[#e8d9b0] bg-[#faf3e0] px-3 py-2 text-[#7a5c17]">
+                      The booking was updated, but the customer email could not be sent.
                     </p>
                   ) : null}
                 </div>
