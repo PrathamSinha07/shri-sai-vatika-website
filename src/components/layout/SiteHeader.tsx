@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { navLinks, bookVisitHref, virtualTourHref } from "@/content/navigation";
+import { navLinks, bookVisitHref, virtualTourHref, sectionIds } from "@/content/navigation";
 import { site } from "@/content/site";
 
 export default function SiteHeader({ overlay }: { overlay?: boolean }) {
@@ -85,7 +85,14 @@ export default function SiteHeader({ overlay }: { overlay?: boolean }) {
         }`}
       >
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:h-[4.5rem] sm:px-6">
-          <a href="#top" className="flex items-center gap-3" aria-label={`${site.name} — home`}>
+          {/* A bare hash link would only scroll — from service pages it must
+              navigate home first, same homepage-aware treatment as every
+              other header link (#top on /, /#top elsewhere). */}
+          <Link
+            href={sectionHref(`#${sectionIds.home}`)}
+            className="flex items-center gap-3"
+            aria-label={`${site.name} — home`}
+          >
             <Image
               src="/logo-mark.png"
               alt=""
@@ -97,7 +104,7 @@ export default function SiteHeader({ overlay }: { overlay?: boolean }) {
             <span className="font-display text-xl leading-none whitespace-nowrap sm:text-2xl">
               {site.shortName}
             </span>
-          </a>
+          </Link>
 
           <nav aria-label="Primary" className="hidden lg:block">
             <ul className="flex items-center gap-7">
