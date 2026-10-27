@@ -191,34 +191,71 @@ export default function BookVisitForm() {
           <label htmlFor="customerName" className="text-small font-semibold tracking-wide text-foreground">
             Customer Name *
           </label>
-          <input id="customerName" name="customerName" type="text" required maxLength={120} className={`${inputClass} mt-2`} />
-          {errors.customerName && <p className={errorClass}>{errors.customerName}</p>}
+          <input
+            id="customerName"
+            name="customerName"
+            type="text"
+            required
+            maxLength={120}
+            aria-invalid={errors.customerName ? true : undefined}
+            aria-describedby={errors.customerName ? "customerName-error" : undefined}
+            className={`${inputClass} mt-2`}
+          />
+          {errors.customerName && <p id="customerName-error" className={errorClass}>{errors.customerName}</p>}
         </div>
         <div>
           <label htmlFor="phone" className="text-small font-semibold tracking-wide text-foreground">
             Phone *
           </label>
-          <input id="phone" name="phone" type="tel" required inputMode="tel" placeholder="Enter your phone number" className={`${inputClass} mt-2`} />
-          {errors.phone && <p className={errorClass}>{errors.phone}</p>}
+          <input
+            id="phone"
+            name="phone"
+            type="tel"
+            required
+            inputMode="tel"
+            placeholder="Enter your phone number"
+            aria-invalid={errors.phone ? true : undefined}
+            aria-describedby={errors.phone ? "phone-error" : undefined}
+            className={`${inputClass} mt-2`}
+          />
+          {errors.phone && <p id="phone-error" className={errorClass}>{errors.phone}</p>}
         </div>
         <div>
           <label htmlFor="email" className="text-small font-semibold tracking-wide text-foreground">
             Email *
           </label>
-          <input id="email" name="email" type="email" required autoComplete="email" className={`${inputClass} mt-2`} />
-          {errors.email && <p className={errorClass}>{errors.email}</p>}
+          <input
+            id="email"
+            name="email"
+            type="email"
+            required
+            autoComplete="email"
+            aria-invalid={errors.email ? true : undefined}
+            aria-describedby={errors.email ? "email-error" : undefined}
+            className={`${inputClass} mt-2`}
+          />
+          {errors.email && <p id="email-error" className={errorClass}>{errors.email}</p>}
         </div>
         <div>
           <label htmlFor="eventType" className="text-small font-semibold tracking-wide text-foreground">
             Event Type *
           </label>
-          <select id="eventType" name="eventType" required defaultValue="" className={`${inputClass} mt-2`} onChange={(e) => setEventType(e.target.value)}>
+          <select
+            id="eventType"
+            name="eventType"
+            required
+            defaultValue=""
+            aria-invalid={errors.eventType ? true : undefined}
+            aria-describedby={errors.eventType ? "eventType-error" : undefined}
+            className={`${inputClass} mt-2`}
+            onChange={(e) => setEventType(e.target.value)}
+          >
             <option value="" disabled>Select event type</option>
             {EVENT_TYPES.map((t) => (
               <option key={t} value={t}>{t}</option>
             ))}
           </select>
-          {errors.eventType && <p className={errorClass}>{errors.eventType}</p>}
+          {errors.eventType && <p id="eventType-error" className={errorClass}>{errors.eventType}</p>}
         </div>
       </div>
 
@@ -227,8 +264,16 @@ export default function BookVisitForm() {
           <label htmlFor="eventTypeOther" className="text-small font-semibold tracking-wide text-foreground">
             Please describe your event *
           </label>
-          <input id="eventTypeOther" name="eventTypeOther" type="text" maxLength={80} className={`${inputClass} mt-2`} />
-          {errors.eventTypeOther && <p className={errorClass}>{errors.eventTypeOther}</p>}
+          <input
+            id="eventTypeOther"
+            name="eventTypeOther"
+            type="text"
+            maxLength={80}
+            aria-invalid={errors.eventTypeOther ? true : undefined}
+            aria-describedby={errors.eventTypeOther ? "eventTypeOther-error" : undefined}
+            className={`${inputClass} mt-2`}
+          />
+          {errors.eventTypeOther && <p id="eventTypeOther-error" className={errorClass}>{errors.eventTypeOther}</p>}
         </div>
       )}
 
@@ -243,6 +288,12 @@ export default function BookVisitForm() {
           required
           min={minDate}
           value={visitDate}
+          aria-invalid={errors.visitDate ? true : undefined}
+          aria-describedby={
+            errors.visitDate
+              ? "visitDate-hint visitDate-error"
+              : "visitDate-hint"
+          }
           onChange={(e) => {
             setVisitDate(e.target.value);
             setTimeSlot("");
@@ -252,10 +303,10 @@ export default function BookVisitForm() {
           }}
           className={`${inputClass} mt-2`}
         />
-        <p className="text-small mt-1 text-muted-foreground">
+        <p id="visitDate-hint" className="text-small mt-1 text-muted-foreground">
           Visits can be booked from {minDate} onwards (Asia/Kolkata).
         </p>
-        {errors.visitDate && <p className={errorClass}>{errors.visitDate}</p>}
+        {errors.visitDate && <p id="visitDate-error" className={errorClass}>{errors.visitDate}</p>}
       </div>
 
       <fieldset className="mt-6">
@@ -286,7 +337,7 @@ export default function BookVisitForm() {
             return (
               <label
                 key={slot}
-                className={`flex cursor-pointer items-center justify-between rounded-control border px-4 py-3 text-small transition-colors ${
+                className={`flex cursor-pointer items-center justify-between rounded-control border px-4 py-3 text-small transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-gold has-[:focus-visible]:outline-offset-2 ${
                   booked
                     ? "cursor-not-allowed border-border bg-ivory text-muted-foreground/70 line-through"
                     : timeSlot === slot
@@ -301,6 +352,7 @@ export default function BookVisitForm() {
                   disabled={booked || !visitDate}
                   checked={timeSlot === slot}
                   onChange={() => setTimeSlot(slot)}
+                  aria-describedby={errors.timeSlot ? "timeSlot-error" : undefined}
                   className="sr-only"
                 />
                 <span>{slot}</span>
@@ -309,7 +361,7 @@ export default function BookVisitForm() {
             );
           })}
         </div>
-        {errors.timeSlot && <p className={errorClass}>{errors.timeSlot}</p>}
+        {errors.timeSlot && <p id="timeSlot-error" className={errorClass}>{errors.timeSlot}</p>}
       </fieldset>
 
       <button
