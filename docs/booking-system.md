@@ -202,6 +202,14 @@ revoked and refused with `403`.
   other capacity-consuming bookings excluding the current one; CAS pins
   status/date/slot; capacity/unique/check violations map to conflicts;
   zero matched rows is a stale refusal).
+- `src/lib/admin/paths.test.ts` (the `?next=` open-redirect guard used by
+  the refresh/logout routes: same-site `/admin` targets — including the
+  login query-string redirects — are kept, while cross-site or malformed
+  values fall back).
+- `src/lib/admin/rate-limit.test.ts` (owner login failure limiter:
+  threshold inside the sliding window, window expiry at the boundary,
+  per-key isolation, clearing, and forwarded-IP parsing for the limiter
+  key).
 - `src/lib/supabase/server.test.ts` (availability derives full/remaining
   from capacity-consuming bookings; capacity-race and unique-violation
   inserts map to `SlotUnavailableError`; other failures stay generic).
