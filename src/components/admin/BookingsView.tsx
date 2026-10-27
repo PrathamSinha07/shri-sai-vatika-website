@@ -52,6 +52,22 @@ interface BulkResultRow {
   emailIssue?: boolean;
 }
 
+// The auth guard answers with internal tokens ("unauthenticated" on 401,
+// "access_denied" on 403) — never show those raw. A 401 already triggers the
+// sign-in redirect in apiFetch, so the caller's fallback text covers the
+// brief moment before navigation completes.
+function displayError(
+  status: number,
+  bodyError: string | undefined,
+  fallback: string
+): string {
+  if (status === 401) return fallback;
+  if (status === 403) {
+    return "You don't have access to this data. Please sign in as the venue owner.";
+  }
+  return bodyError ?? fallback;
+}
+
 export default function BookingsView() {
   const router = useRouter();
 
@@ -136,7 +152,7 @@ export default function BookingsView() {
           | null;
         if (controller.signal.aborted) return;
         if (!res.ok || !body?.ok) {
-          setError(body?.error ?? "We couldn't load the bookings right now.");
+          setError(displayError(res.status, body?.error, "We couldn't load the bookings right now."));
           setData(null);
         } else {
           setData({
@@ -180,7 +196,7 @@ export default function BookingsView() {
         if (res.ok && body?.ok && body.booking) {
           setSelected(body.booking);
         } else {
-          setDetailError(body?.error ?? "We couldn't load this booking right now.");
+          setDetailError(displayError(res.status, body?.error, "We couldn't load this booking right now."));
         }
       } catch {
         if (!cancelled) setDetailError("We couldn't load this booking right now.");
@@ -254,8 +270,13 @@ export default function BookingsView() {
         setRescheduling(false);
         return;
       }
-      setActionError(body?.error ?? "We couldn't update this booking right now.");
-      setLive(body?.error ?? "The update failed.");
+      const message = displayError(
+        res.status,
+        body?.error,
+        "We couldn't update this booking right now."
+      );
+      setActionError(message);
+      setLive(message);
     } catch {
       setActionError("We couldn't update this booking right now.");
       setLive("The update failed.");
@@ -313,7 +334,9 @@ export default function BookingsView() {
           }
         | null;
       if (!res.ok || !body?.ok) {
-        setBulkError(body?.error ?? "We couldn't confirm the selected bookings.");
+        setBulkError(
+          displayError(res.status, body?.error, "We couldn't confirm the selected bookings.")
+        );
         return;
       }
       const names = new Map(targets.map((booking) => [booking.id, booking.customerName]));
