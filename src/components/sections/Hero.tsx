@@ -69,11 +69,14 @@ export default function Hero() {
             transition={{ duration: 0.7, ease: "easeOut" }}
             className="max-w-2xl"
           >
-            {/* Brand line: sized ~12% above the old 0.7rem / text-xs scale so it
-                reads clearly over the photograph, still clearly subordinate to
-                the headline. Colour, tracking and the gold rule are unchanged. */}
-            <p className="flex items-center gap-3 text-[0.78rem] font-semibold uppercase tracking-[0.3em] text-gold-rich sm:text-[0.84rem]">
-              <span aria-hidden="true" className="h-px w-8 bg-gold-rich/70 sm:w-12" />
+            {/* Brand line: client-requested boost — fluid ~1rem–1.35rem sizing
+                (was 0.78/0.84rem) with bold weight and a soft scrim-coloured
+                text shadow so the gold reads over any part of the photograph.
+                Colour, uppercase tracking and the gold rule preserve the
+                existing identity; the clamp keeps it clear of the headline
+                and inside the gutter on every viewport. */}
+            <p className="flex items-center gap-3 text-[clamp(1rem,2.6vw,1.35rem)] font-bold uppercase tracking-[0.3em] text-gold-rich [text-shadow:0_1px_3px_rgba(26,10,12,0.65)]">
+              <span aria-hidden="true" className="h-px w-10 shrink-0 bg-gold-rich/80 sm:w-14" />
               {site.shortName}
             </p>
             <h1 className="font-display mt-6 text-hero text-surface">

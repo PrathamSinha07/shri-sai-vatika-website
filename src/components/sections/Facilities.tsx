@@ -39,13 +39,13 @@ function Icon({ name }: { name: FacilityIcon }) {
       return <svg {...common}><path d="M4 16h16M6 16v4M18 16v4M8 16V9h8v7"/><path d="M8 9c0-2 1.5-3 4-3s4 1 4 3"/></svg>;
     case "gate":
       return <svg {...common}><path d="M5 21V10a7 7 0 0 1 14 0v11M5 21h14M12 10v11"/></svg>;
+    case "passage":
+      // Corridor in perspective — same 24px stroke language as the gate arch.
+      return <svg {...common}><path d="M4 3v18M20 3v18M8 21l2.5-16M16 21l-2.5-16M8 12h8"/></svg>;
     case "food":
       return <svg {...common}><path d="M7 3v7a2 2 0 0 0 4 0V3M9 3v18M16 3c-1.5 1.5-2 4-2 6h3v12M16 3v18"/></svg>;
     case "selfie":
       return <svg {...common}><rect x="7" y="3" width="10" height="18" rx="2"/><circle cx="12" cy="9" r="2.5"/><path d="M10.5 18h3"/></svg>;
-    case "varmala":
-    case "baraat":
-      return <svg {...common}><circle cx="12" cy="8" r="3"/><path d="M12 11v8M9 15l3 2 3-2"/></svg>;
   }
 }
 

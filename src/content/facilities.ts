@@ -1,5 +1,7 @@
 // Facilities as supplied by the client. Grouped for presentation only;
 // do not add amenities the venue does not offer.
+// Client-approved revision: gate and passage decorations are listed as
+// separate entries; Varmala and the Baraat welcome mala are not listed.
 
 export type FacilityIcon =
   | "hall"
@@ -14,10 +16,9 @@ export type FacilityIcon =
   | "power"
   | "stage"
   | "gate"
+  | "passage"
   | "food"
-  | "selfie"
-  | "varmala"
-  | "baraat";
+  | "selfie";
 
 export const facilityGroups: ReadonlyArray<{
   title: string;
@@ -47,11 +48,10 @@ export const facilityGroups: ReadonlyArray<{
     title: "Celebration Details",
     items: [
       { label: "Stage", icon: "stage" },
-      { label: "Gate / Passage Decoration", icon: "gate" },
+      { label: "Gate Decoration", icon: "gate" },
+      { label: "Passage Decoration", icon: "passage" },
       { label: "Food Stall", icon: "food" },
       { label: "Selfie Point", icon: "selfie" },
-      { label: "Varmala", icon: "varmala" },
-      { label: "30-Piece Baraat Welcome Mala", icon: "baraat" },
     ],
   },
 ];

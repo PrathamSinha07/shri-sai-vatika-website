@@ -17,8 +17,9 @@ export const site = {
 export const verifiedNotice =
   "Business details and pricing are client-provided and pending verification.";
 
-// Flat list retained for compatibility; structured facilities live in
-// `src/content/facilities.ts`.
+// Flat list retained for compatibility with the client-approved facilities
+// revision (gate and passage decorations split; no Varmala / Baraat mala);
+// structured facilities live in `src/content/facilities.ts`.
 // Package pricing lives in `src/content/packages.ts`.
 export const facilities = [
   "3000 sq.ft. AC Hall",
@@ -32,11 +33,10 @@ export const facilities = [
   "Purified water",
   "Power backup",
   "Stage",
-  "Gate/passage decoration",
+  "Gate decoration",
+  "Passage decoration",
   "Food stall",
   "Selfie point",
-  "Varmala",
-  "30-piece Baraat welcome mala",
 ] as const;
 
 
