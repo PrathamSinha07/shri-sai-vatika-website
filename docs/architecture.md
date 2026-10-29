@@ -39,7 +39,8 @@ src/
     admin/              # auth, session guards, transitions, action planning,
                         # bulk validation, booking data access
     supabase/           # server client (service role, server-only)
-    email/              # resend client + templates + owner-action notifications
+    email/              # resend client + templates + new-booking and
+                        # owner-action email orchestration
     booking/            # visit-booking validation rules + slot capacity
     maps.ts             # google maps url builders
     whatsapp.ts         # click-to-chat url builder

@@ -35,4 +35,6 @@ Notes:
   (use `onboarding@resend.dev` only for local testing).
 - If any of these are missing, bookings are still stored with
   `status = PENDING`; the API returns `emailIssue: true` and the failure is
-  logged server-side (variable names only, never values).
+  logged server-side (variable names only, never values). During a
+  temporary launch without a verified sending domain, the owner must rely
+  on the dashboard instead of email — see `docs/deployment.md`.

@@ -32,6 +32,7 @@ Production website for Shri Sai Vatika Banquet Hall, Patna.
 - `docs/admin-dashboard.md` — private owner dashboard, auth + authorization
 - `docs/enquiry-email-workflow.md` — enquiry → Supabase → Resend flow
 - `docs/environment-variables.md` — required env vars
+- `docs/deployment.md` — temporary no-email launch on a Vercel domain
 
 <!-- BEGIN:nextjs-agent-rules -->
 

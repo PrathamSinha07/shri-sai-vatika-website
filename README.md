@@ -67,4 +67,6 @@ Project documentation lives in [`docs/`](docs/README.md):
 - `docs/database-schema.md` — Supabase schema
 - `docs/enquiry-email-workflow.md` — enquiry → persistence → emails
 - `docs/environment-variables.md` — environment variables
+- `docs/deployment.md` — temporary launch on a Vercel domain, operating
+  without email delivery until a verified sender exists
 - `docs/component-boundaries.md` — reusable UI vs. business sections

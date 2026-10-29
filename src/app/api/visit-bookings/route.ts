@@ -7,7 +7,7 @@ import {
   BookingStoreError,
   SlotUnavailableError,
 } from "@/lib/supabase/server";
-import { sendEmail, customerConfirmationEmail, ownerNotificationEmail } from "@/lib/email/resend";
+import { sendNewBookingEmails } from "@/lib/email/booking-notify";
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -51,46 +51,17 @@ export async function POST(request: Request) {
 
     const booking = await insertVisitBooking(data);
 
-    // Emails are independent of the booking lifecycle: failures are logged
-    // and reported, never rolled back.
-    let emailIssue = false;
-    try {
-      const customerMail = customerConfirmationEmail(data);
-      const ownerMail = ownerNotificationEmail({
-        ...data,
-        bookingId: booking.id,
-        submittedAt: new Date(booking.createdAt).toLocaleString("en-IN", {
-          timeZone: "Asia/Kolkata",
-        }),
-      });
-      const ownerEmail =
-        process.env.BOOKING_NOTIFY_EMAIL ?? process.env.ENQUIRY_NOTIFY_EMAIL;
-      const missingConfig: string[] = [];
-      if (!process.env.RESEND_API_KEY) missingConfig.push("RESEND_API_KEY");
-      if (!process.env.RESEND_FROM_EMAIL) missingConfig.push("RESEND_FROM_EMAIL");
-      if (!ownerEmail)
-        missingConfig.push("BOOKING_NOTIFY_EMAIL (or ENQUIRY_NOTIFY_EMAIL)");
-      if (missingConfig.length > 0) {
-        console.error(
-          `Email not fully configured. Missing env var(s): ${missingConfig.join(", ")}`
-        );
-        emailIssue = true;
-      }
-      const results = await Promise.all([
-        sendEmail({ to: data.email, ...customerMail }),
-        ownerEmail
-          ? sendEmail({ to: ownerEmail, ...ownerMail })
-          : Promise.resolve({ ok: false } as const),
-      ]);
-      if (!ownerEmail) {
-        console.error("BOOKING_NOTIFY_EMAIL is not configured");
-        emailIssue = true;
-      }
-      if (results.some((r) => !r.ok)) emailIssue = true;
-    } catch (err) {
-      console.error("Email step failed", err);
-      emailIssue = true;
-    }
+    // Emails are independent of the booking lifecycle: failures (including
+    // a missing Resend configuration on a temporary launch domain) are
+    // logged and reported, never rolled back. The booking above is already
+    // saved and visible in the owner dashboard regardless of the outcome.
+    const { emailIssue } = await sendNewBookingEmails({
+      data,
+      bookingId: booking.id,
+      submittedAt: new Date(booking.createdAt).toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+      }),
+    });
 
     return NextResponse.json({
       ok: true,

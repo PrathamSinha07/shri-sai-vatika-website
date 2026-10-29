@@ -153,8 +153,14 @@ revoked and refused with `403`.
   results carry a per-booking `emailIssue`. Delivery failures are
   reported separately from update failures everywhere.
 - Templates live in `src/lib/email/resend.ts`; the orchestration
-  (`src/lib/email/notify.ts`) never throws and never affects the
-  database state.
+  (`src/lib/email/notify.ts` for owner actions, `src/lib/email/booking-notify.ts`
+  for new requests) never throws and never affects the database state.
+- While email is unconfigured (e.g. a temporary launch on a Vercel
+  domain with no verified sender), every step above degrades the same
+  way: the booking/owner-action is saved, `emailIssue: true` is returned,
+  and the customer UI says the request was saved but the confirmation
+  email could not be sent. The owner dashboard is the source of truth
+  until email is configured — see `docs/deployment.md`.
 
 ## Security
 
@@ -216,6 +222,17 @@ revoked and refused with `403`.
 - `src/lib/email/notify.test.ts` (owner-action emails: correct template
   per action, reschedule carries the new date/time, delivery failure /
   throw / missing config all reported as `emailIssue`, never thrown).
+- `src/lib/email/booking-notify.test.ts` (new-booking emails: customer
+  receipt + owner summary when configured, missing Resend config / owner
+  inbox / delivery failure / throw all reported as `emailIssue` without
+  affecting the stored booking).
+- `src/lib/whatsapp.test.ts` (wa.me links: venue number 919835063448
+  default, env override, prefilled messages fully URL-encoded).
+- `src/content/facilities.test.ts` (client-approved facilities list: no
+  Varmala / Baraat welcome mala, gate and passage decorations as separate
+  entries, other entries and icon coverage unchanged).
+- `src/components/sections/hero.test.ts` (hero brand line: fluid readable
+  sizing, approved gold identity, no overflow risk, legibility shadow).
 
 `scripts/qa-admin.mjs` exercises the private dashboard end to end against a
 production build (see `docs/admin-dashboard.md`).
