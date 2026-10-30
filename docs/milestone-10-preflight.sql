@@ -147,6 +147,8 @@ select
 -- Printed as notices so a missing history table cannot abort the script.
 
 do $$
+declare
+  r record;
 begin
   if exists (
     select 1 from pg_namespace where nspname = 'supabase_migrations'
@@ -165,6 +167,9 @@ begin
   else
     raise notice 'supabase_migrations.schema_migrations not found (SQL-editor-managed project)';
   end if;
+exception
+  when others then
+    raise notice 'migration history inspection failed (informational only): %', SQLERRM;
 end $$;
 
 -- 7b) Capacity objects already present?
